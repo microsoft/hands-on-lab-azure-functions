@@ -229,7 +229,7 @@ The deployment should take around 5 minutes to complete.
 
 ---
 
-# Lab 1 : Transcribe an audio file
+# Lab 1 : Upload an audio file
 
 For this first lab, you will focus on the following scope :
 
@@ -242,9 +242,7 @@ To check that everything was created as expected, open the [Azure Portal][az-por
 ![Storage account access keys](assets/storage-account-show-container.png)
 
 
-## Upload a file (30 min)
-
-### Azure Functions : A bit of theory
+## Azure Functions : A bit of theory
 
 Azure Functions is a `compute-on-demand` solution, offering a common function programming model for various languages. To use this serverless solution, no need to worry about deploying and maintaining infrastructures, Azure provides with the necessary up-to-date compute resources needed to keep your applications running. Focus on your code and let Azure Functions handle the rest.
 
@@ -257,7 +255,7 @@ In the same `Function App` you will be able to add multiple `functions`, each wi
 
 Azure Functions run and benefit from the App Service platform, offering features like: deployment slots, continuous deployment, HTTPS support, hybrid connections and others. Apart from the `Consumption` (Serverless) model we're most interested in this Lab, Azure Functions can also be deployed a dedicated `App Service Plan`or in a hybrid model called `Premium Plan`.
 
-### Azure Functions : Let's practice
+## Azure Functions : Let's practice
 
 At this stage in our scenario, the goal is to upload an audio into the Storage Account inside the `audios` container. To achieve this, an Azure Function will be used as an API to upload the audio file with a unique `GUID` name to your Storage Account.
 
@@ -285,7 +283,7 @@ At this stage in our scenario, the goal is to upload an audio into the Storage A
 
 If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions/FuncStd`.
 
-#### Preparation
+### Preparation
 
 You will create a function using the [Azure Function Core Tools][azure-function-core-tools]:
 
@@ -311,7 +309,7 @@ code .
 
 If you open the Azure Function App resource started with `func-std` in the [Azure Portal][az-portal] and go to the `Environment variables` panel. You should see in App Settings the `STORAGE_ACCOUNT_CONTAINER` set to `audios` and the connection string of the storage account already pre-populated in the `STORAGE_ACCOUNT_CONNECTION_STRING` environment variable.
 
-#### .NET 8 implementation
+### .NET 8 implementation
 
 In this version of the implementation, you will be using the [.NET 8 Isolated](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-in-process-differences) runtime.
 
@@ -378,9 +376,9 @@ public AudioUploadOutput Run(
 
 </details>
 
-#### Testing
+### Testing
 
-##### Run the function locally
+#### Run the function locally
 
 Add the following environment variables to your `local.settings.json` file:
 
@@ -406,9 +404,9 @@ Then you can use the Azure Function Core Tools to run the function locally:
 func start
 ```
 
-#### Deployment
+### Deployment
 
-##### Option 1 : Deploy your function with VS Code
+#### Option 1 : Deploy your function with VS Code
 
 - Open the Azure extension in VS Code left panel
 - Make sure you're signed in to your Azure account
@@ -417,7 +415,7 @@ func start
 
 ![Deploy to Function App](assets/function-app-deploy.png)
 
-##### Option 2 : Deploy your function with the Azure Function Core Tools
+#### Option 2 : Deploy your function with the Azure Function Core Tools
 
 Deploy your function using the VS Code extension or by command line:
 
