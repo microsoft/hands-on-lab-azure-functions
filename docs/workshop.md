@@ -1133,7 +1133,7 @@ By now you should have a solution that :
 
 # Lab 7 : Integrate the Azure Functions with APIM
 
-TODO: Show how easy it is to integrate the Azure Functions with APIM.
+TODO: Show how easy it is to integrate the Azure Functions with APIM. Maybe use Azure Load Testing.
 
 ---
 
