@@ -471,7 +471,7 @@ TODO: Update the Azure Function to use a Managed Identity to access the Azure St
 
 ---
 
-# Lab 5 : Retry and Circuit Breaker Pattern with Azure Functions
+# Lab 5 : Retry - Reliability
 
 TODO: To define
 
