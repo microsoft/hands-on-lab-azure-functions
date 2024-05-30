@@ -1137,7 +1137,7 @@ TODO: Show how easy it is to integrate the Azure Functions with APIM. Maybe use 
 
 # Lab 8 : Use Azure Functions for Azure Open AI
 
-TODO: To define
+TODO: Add an Azure Functions connected to Cosmos DB and Azure Open AI to analyse and add informations into the new entry.
 
 ---
 
