@@ -5,6 +5,7 @@ title: Product Hands-on Lab - Azure Functions
 short_title: Azure Functions
 description: This workshop will cover the integration of Azure Functions service with other Azure service. You will use it to build a complete real world scenario.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
+navigation_numbering: false
 authors: # Required. You can add as many authors as needed
   - Iheb Khemissi
   - Julien Strebler
