@@ -64,7 +64,7 @@ With everything ready let's start the lab 🚀
 
 Before starting this lab, be sure to set your Azure environment :
 
-- An Azure Subscription with the **Contributor** role to create and manage the labs' resources and deploy the infrastructure as code
+- An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code. If not possible the **Contributor** role will be enough to deploy the resources but without the ability to create a Managed Identity.
 - A dedicated resource group for this lab to ease the cleanup at the end.
 - Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`.
 
@@ -207,11 +207,23 @@ First, you need to initialize the terraform infrastructure by running the follow
 cd terraform && terraform init
 ```
 
-Then run the following command to deploy the infrastructure:
+Then run the following command to deploy the infrastructure if you have the **Owner** role on the subscription:
+
+```bash
+terraform plan -out plan.out
+```
+
+If you have the **Contributor** role, you will need to set the `create_managed_identity` variable to `false` by running the following command:
+
+```bash
+terraform plan -var create_managed_identity=false -out plan.out
+```
+
+Finally apply the deployment:
 
 ```bash
 # Apply the deployment directly
-terraform apply -auto-approve
+terraform apply -out plan.out
 ```
 
 The deployment should take around 5 minutes to complete.
@@ -290,8 +302,8 @@ You will create a function using the [Azure Function Core Tools][azure-function-
 
 ```bash
 # Create a folder for your function app and navigate to it
-mkdir <function-app-name>
-cd <function-app-name>
+mkdir FuncStd
+cd FuncStd
 
 # Create the new function app as a .NET 8 Isolated project
 # No need to specify a name, the folder name will be used by default
@@ -421,8 +433,8 @@ func start
 Deploy your function using the VS Code extension or by command line:
 
 ```bash
-func azure functionapp publish 
-func-std-<your-instance-suffix-name>
+# Inside the FuncStd folder run the following command:
+func azure functionapp publish func-std-<your-instance-suffix-name>
 ```
 
 Let's give a try using Postman. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`. 
@@ -435,6 +447,23 @@ Use this url into your Postman to upload the audio file. Create a POST request a
 ![Postman](assets/func-postman.png)
 
 </details>
+
+### Save your changes
+
+Don't forget to commit your changes to your forked repository to keep track of your progress. You will need the code for the next labs.
+
+You can commit directly on the `main` branch for this workshop:
+
+Open a terminal and run the following commands:
+
+```bash
+# Add, commit and push your changes
+git add .
+git commit -m "Lab 1 - Azure Function to upload audio file"
+git push
+```
+
+You are now ready for the next labs!
 
 ## Lab 1 : Summary
 
@@ -456,7 +485,144 @@ The first Azure Function API created in the Lab offers a first security layer to
 
 # Lab 2 : Deploy your Azure Functions using GitHub Actions
 
-TODO: Setup GitHub Actions to deploy the Azure Functions to Azure using the Azure Portal.
+In this lab you will use the `FuncStd` Function App created in the previous lab.
+
+The goal is to automate the deployment of this Function App usin  GitHub Actions. This will allow you to deploy all new changes to Azure when you push your code to the repository.
+
+## Create a GitHub Actions workflow
+
+<div class="task" data-title="Tasks">
+
+> Inside the Azure Function App on Azure Portal which start by `func-std`, go to the `Deployment Center` and try to setup a GitHub Actions workflow to deploy the Azure Functions from the `FuncStd` folder.
+
+</div>
+
+<div class="tip" data-title="Tips">
+
+> [Azure Functions Deployment Center][azure-function-deployment-center]<br>
+
+</div>
+
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+### Configure the deployment source
+
+Go to the Azure Function App resource with the name starting with `func-std` in the [Azure Portal][az-portal] and go to the `Deployment Center`:
+
+![Select continuous deployment](assets/function-select-continuous-deployment.png)
+
+In the dropdown menu, select `GitHub`. You will have to sign in to your GitHub account and select the repository and branch you want to deploy from, in your case it should be the forked repository of this workshop and the `main` branch:
+
+![Select repository](assets/function-create-continuous-deployment-1.png)
+
+Then if you have deployed the infrastructure using the provided Terraform configuration with the **Owner** role on your subscription select the `User-assigned Identity` option to manage the authentication between GitHub and Azure. 
+
+You should see an identity stating with `id-func-std-` in the resource group of the Function App. Select this identity in the dropdown menu:
+
+![Select authentification type](assets/function-create-continuous-deployment-2.png)
+
+If you have deployed the infrastructure with the **Contributor** role, select the `Basic authentication` option. This will use the Publish Profile to authenticate the deployment.
+
+Azure will generate for you a new workflow based on the configuration of your Function App and push it directly to your GitHub repository inside the `.github/workflows` folder. You have also access to a preview of the workflow at the end of the process by clicking on `Preview file`.
+
+Finally, click on the **Save** button and let Azure processed the creation of the workflow.
+
+### Update the GitHub Actions workflow
+
+Now if you go to your GitHub repository, you should see a new folder `.github` with a `workflows` folder containing the `YAML` file. The file which should start with: `main_func-std-`.
+
+Open it and update the `AZURE_FUNCTIONAPP_PACKAGE_PATH` value with the folder where your Function App is located. In this case, if you followed the previous lab entirely, it should be `FuncStd`.
+
+Your workflow file should look like this one:
+
+```yaml
+name: Build and deploy dotnet core project to Azure Function App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'FuncStd' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write #This is required for requesting the JWT
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 'Resolve Project Dependencies Using Dotnet'
+        shell: bash
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+      
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AF92B6192C8247AEB1477BD6F8234F8 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5D6C9612393042E18C71D6C1E815AD8 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9D0D44BA36384A2886F3894D5296BBD }}
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: 'func-std-lab-ea-hol-ms-548d-01'
+          slot-name: 'Production'
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+```
+
+Now you can push this file to your repository and the GitHub Actions workflow will be triggered to deploy the Azure Function App.
+
+Let's understand how this GitHub Action workflow works:
+
+- The `on` section defines the events that will trigger the workflow. In this case, the workflow will be triggered on every push to the `main` branch but also manually using the `workflow_dispatch` event.
+
+- The `env` section defines the environment variables that will be used in the workflow. The `AZURE_FUNCTIONAPP_PACKAGE_PATH` variable is set to the path of the Azure Function App project and the `DOTNET_VERSION` variable is set to the version of the .NET SDK to use.
+
+- Then you have a job called `build-and-deploy` that runs on an `ubuntu-latest` runner. This job has several steps:
+  - The first step checks out the code from the repository.
+  - The second step sets up the .NET environment using the `setup-dotnet` action.
+  - The third step resolves the project dependencies using the `dotnet build` command.
+  - The fourth step logs in to Azure using the `azure/login` action with the user assigned identity to connect to Azure. All the credentials are stored in GitHub secrets. If you have deployed the infrastructure with the **Contributor** role, the `azure/login` will not be used and the `functions-action` will use the Publish Profile to authenticate the deployment.
+  - The final step runs the Azure `functions-action` to deploy the Azure Function App.
+
+To see the deployment status, go to the `Actions` tab in your GitHub repository:
+
+![GitHub Actions Overview](assets/function-github-actions-overview.png)
+
+If you open it you will see the detail of the job with all the steps executed:
+
+![Github Actions Detail](assets/function-job-detail.png)
+
+As you can see all steps executed successfully and you can look at the logs to see the details of each step.
+
+You can now try to add some changes to your Azure Function and push them to your repository to see the GitHub Actions workflow in action.
+
+</details>
+
+## Lab 2 : Summary
+
+By now you should have a solution that deploy the Azure Function App using GitHub Actions.
+
+[azure-function-deployment-center]: https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment?tabs=github%2Cgithubactions#configure-the-deployment-source
+[az-portal]: https://portal.azure.com
 
 ---
 
