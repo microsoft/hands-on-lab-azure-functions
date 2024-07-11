@@ -19,6 +19,7 @@ namespace FuncStd
     {
         private readonly ILogger _logger;
         private readonly int _errorRate;
+        private readonly int _latencyInSeconds;
 
         public AudioUpload(ILoggerFactory loggerFactory)
         {
@@ -29,6 +30,12 @@ namespace FuncStd
             {
                 _errorRate = 0;
             }
+
+            // Get the extra injected latency from the environment variables
+            if (!Int32.TryParse(Environment.GetEnvironmentVariable("LATENCY_IN_SECONDS"), out _latencyInSeconds))
+            {
+                _latencyInSeconds = 0;
+            }
         }
 
         [Function(nameof(AudioUpload))]
@@ -37,7 +44,13 @@ namespace FuncStd
         )
         {
             _logger.LogInformation("Processing a new audio file upload request");
-            
+
+            // Simulating latency: sleep for _latencyInSeconds seconds
+            if (_latencyInSeconds != 0) {
+                _logger.LogInformation($"Sleeping for {_latencyInSeconds} seconds");
+                Thread.Sleep(_latencyInSeconds * 1000);
+            }
+
             // Simulating errors: throw errors with a probability of _errorRate
             if (_errorRate != 0 && Random.Shared.Next(0, 100) < _errorRate) {
                 _logger.LogInformation("We will throw an error for this request!");
