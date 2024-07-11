@@ -3,8 +3,8 @@ resource "azurerm_linux_function_app" "standard" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
 
-  storage_account_name       = azurerm_storage_account.func.name
-  storage_account_access_key = azurerm_storage_account.func.primary_access_key
+  storage_account_name       = azurerm_storage_account.func_std.name
+  storage_account_access_key = azurerm_storage_account.func_std.primary_access_key
   service_plan_id            = azurerm_service_plan.this.id
 
   tags = local.tags
@@ -36,8 +36,8 @@ resource "azurerm_linux_function_app" "durable" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
 
-  storage_account_name       = azurerm_storage_account.func.name
-  storage_account_access_key = azurerm_storage_account.func.primary_access_key
+  storage_account_name       = azurerm_storage_account.func_drbl.name
+  storage_account_access_key = azurerm_storage_account.func_drbl.primary_access_key
   service_plan_id            = azurerm_service_plan.this.id
 
   tags = local.tags

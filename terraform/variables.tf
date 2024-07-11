@@ -20,12 +20,6 @@ variable "location" {
   default     = "eastus2"
 }
 
-variable "owner" {
-  description = "The name of the project's owner"
-  type        = string
-  default     = "ms"
-}
-
 variable "resource_group_name_suffix" {
   type        = string
   default     = "01"

@@ -13,8 +13,17 @@ resource "azurerm_storage_container" "this" {
   container_access_type = "private"
 }
 
-resource "azurerm_storage_account" "func" {
-  name                     = format("stfunc%s", local.resource_suffix_lowercase)
+resource "azurerm_storage_account" "func_std" {
+  name                     = format("stfstd%s", local.resource_suffix_lowercase)
+  resource_group_name      = azurerm_resource_group.this.name
+  location                 = azurerm_resource_group.this.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  tags                     = local.tags
+}
+
+resource "azurerm_storage_account" "func_drbl" {
+  name                     = format("stfdrbl%s", local.resource_suffix_lowercase)
   resource_group_name      = azurerm_resource_group.this.name
   location                 = azurerm_resource_group.this.location
   account_tier             = "Standard"
