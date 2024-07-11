@@ -18,10 +18,17 @@ namespace FuncStd
     public class AudioUpload
     {
         private readonly ILogger _logger;
+        private readonly int _errorRate;
 
         public AudioUpload(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<AudioUpload>();
+
+            // Get the error rate from the environment variables
+            if (!Int32.TryParse(Environment.GetEnvironmentVariable("ERROR_RATE"), out _errorRate))
+            {
+                _errorRate = 0;
+            }
         }
 
         [Function(nameof(AudioUpload))]
@@ -30,7 +37,18 @@ namespace FuncStd
         )
         {
             _logger.LogInformation("Processing a new audio file upload request");
+            
+            // Simulating errors: throw errors with a probability of _errorRate
+            if (_errorRate != 0 && Random.Shared.Next(0, 100) < _errorRate) {
+                _logger.LogInformation("We will throw an error for this request!");
 
+                return new AudioUploadOutput()
+                {
+                    HttpResponse = new BadRequestObjectResult("Error!")
+                };
+            }
+
+            // Get the first file in the form
             byte[]? audioFileData = null;
             var file = req.Form.Files[0];
 
@@ -40,6 +58,7 @@ namespace FuncStd
                 audioFileData = memstream.ToArray();
             }
 
+            // Store the file as a blob and return a success response
             return new AudioUploadOutput()
             {
                 Blob = audioFileData,
