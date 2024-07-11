@@ -417,6 +417,14 @@ Then you can use the Azure Function Core Tools to run the function locally:
 func start
 ```
 
+<div class="tip" data-title="Tips">
+
+> If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
+> Please refer to this [port forwarding guide on Github Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace#using-command-line-tools-and-rest-clients-to-access-ports) for more details.
+
+</div>
+
+
 ### Deployment
 
 #### Option 1 : Deploy your function with VS Code
