@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using UnexpectedBehaviors;
 
 namespace FuncStd
 {
@@ -18,24 +19,10 @@ namespace FuncStd
     public class AudioUpload
     {
         private readonly ILogger _logger;
-        private readonly int _errorRate;
-        private readonly int _latencyInSeconds;
 
         public AudioUpload(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<AudioUpload>();
-
-            // Get the error rate from the environment variables
-            if (!Int32.TryParse(Environment.GetEnvironmentVariable("ERROR_RATE"), out _errorRate))
-            {
-                _errorRate = 0;
-            }
-
-            // Get the extra injected latency from the environment variables
-            if (!Int32.TryParse(Environment.GetEnvironmentVariable("LATENCY_IN_SECONDS"), out _latencyInSeconds))
-            {
-                _latencyInSeconds = 0;
-            }
         }
 
         [Function(nameof(AudioUpload))]
@@ -45,21 +32,8 @@ namespace FuncStd
         {
             _logger.LogInformation("Processing a new audio file upload request");
 
-            // Simulating latency: sleep for _latencyInSeconds seconds
-            if (_latencyInSeconds != 0) {
-                _logger.LogInformation($"Sleeping for {_latencyInSeconds} seconds");
-                Thread.Sleep(_latencyInSeconds * 1000);
-            }
-
-            // Simulating errors: throw errors with a probability of _errorRate
-            if (_errorRate != 0 && Random.Shared.Next(0, 100) < _errorRate) {
-                _logger.LogInformation("We will throw an error for this request!");
-
-                return new AudioUploadOutput()
-                {
-                    HttpResponse = new BadRequestObjectResult("Error!")
-                };
-            }
+            // Simulate unexpected bahaviors
+            Chaos.Start();
 
             // Get the first file in the form
             byte[]? audioFileData = null;
