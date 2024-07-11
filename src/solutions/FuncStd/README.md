@@ -8,33 +8,24 @@ az functionapp create \
     --runtime dotnet-isolated \
     --os-type Linux \
     --functions-version 4 \
-    --runtime-version 7 \
+    --runtime-version 8 \
     --storage-account <storage-account>
 ```
 
 ## Create the AudioUpload function
 
 ```sh
-func init --worker-runtime dotnet-isolated --target-framework net7.0
+func init --worker-runtime dotnet-isolated --target-framework net8.0
 func new --name AudioUpload --template "HTTP trigger" --authlevel "function"
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 5.0.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.3.0
 ```
 
 ## Create the GetTranscriptions function
 
 ```sh
 func new --name GetTranscriptions --template "HTTP trigger" --authlevel "function"
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 3.0.9
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.8.0
 ```
-
-## Create the CosmosToWebPubSub function
-
-```sh
-func new --name CosmosToWebPubSub --template "CosmosDBTrigger"
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.WebPubSub --version 1.5.0-beta.1 --prerelease
-```
-
-Example of how to use Web PubSub from a dotnet-isolated function: https://github.com/Azure/azure-webpubsub/blob/main/samples/functions/csharp/notifications-isolated/Functions.cs
 
 ## Publishing the Function App
 

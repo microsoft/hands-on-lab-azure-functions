@@ -1,6 +1,6 @@
-using System.Net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
 namespace FuncStd
@@ -9,9 +9,10 @@ namespace FuncStd
     public class AudioUploadOutput
     {
         [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection="STORAGE_ACCOUNT_CONNECTION_STRING")]
-        public byte[] Blob { get; set; }
+        public byte[]? Blob { get; set; }
 
-        public HttpResponseData HttpResponse { get; set; }
+        [HttpResult]
+        public required IActionResult HttpResponse { get; set; }
     }
 
     public class AudioUpload
@@ -25,28 +26,24 @@ namespace FuncStd
 
         [Function(nameof(AudioUpload))]
         public AudioUploadOutput Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req
         )
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation("Processing a new audio file upload request");
 
-            // https://github.com/Azure/azure-functions-dotnet-worker/issues/366
-            var audioFileData = default(byte[]);
+            byte[]? audioFileData = null;
+            var file = req.Form.Files[0];
+
             using (var memstream = new MemoryStream())
             {
-                req.Body.CopyTo(memstream);
+                file.OpenReadStream().CopyTo(memstream);
                 audioFileData = memstream.ToArray();
             }
-
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
-
-            response.WriteString("Uploaded!");
 
             return new AudioUploadOutput()
             {
                 Blob = audioFileData,
-                HttpResponse = response
+                HttpResponse = new OkObjectResult("Uploaded!")
             };
         }
     }
