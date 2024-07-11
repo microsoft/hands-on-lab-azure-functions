@@ -1298,7 +1298,118 @@ By now you should have a solution that :
 
 # Lab 7 : Integrate the Azure Functions with APIM
 
-TODO: Show how easy it is to integrate the Azure Functions with APIM. Maybe use Azure Load Testing.
+Let's now integrate the Azure Functions with Azure API Management (APIM) to expose the transcription of the audio file as an API. 
+
+Previously to test your Azure Function you had to get the Function Url with the *default (function key)* to ensure a basic security layer. But in a real-world scenario, you will need to secure your Azure Function and expose it through an API Gateway like Azure API Management.
+
+In fact, with Azure API Management you can expose your Azure Functions as APIs and manage them with policies like authentication, rate limiting, caching, etc. You can manage who can call your Azure Function by providing a subscription key or using OAuth 2.0 authentication.
+
+In this lab you will see how to expose the Azure Function as an API using Azure API Management.
+
+## Define the API in APIM
+
+### Import the Azure Function
+
+Inside your resource group, you should see an APIM instance. Click on it, you will be redirected to the APIM instance overview.
+
+<div class="task" data-title="Tasks">
+
+> Define your Azure Function as an API in Azure API Management.
+
+</div>
+
+<div class="tip" data-title="Tips">
+
+> [Import Azure Function Azure API Management][import-azure-function-azure-api-management]<br>
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+First, go to the **APIs** section in the left menu and click on the **+ Add API** button.
+
+Then select the **Function App** option:
+
+![Select Function App](assets/apim-import-function.png)
+
+In the popup menu to create a Function select **Browse**, this will redirect you to the list of all Azure Functions in your Subscription. Click on the **Select** button and pick the Azure Function which is responsible for the transcription of the audio file. It should start by `func-std-`.
+
+![Select Function](assets/apim-select-function-app.png)
+
+Then you will see automatically the list of endpoints, select the **AudioUpload** and click on the **Select** button.
+
+This will fill all the information needed to create the API in APIM, let's update the API details to have something more meaningful.
+
+- **Display name**: `Audio Transcription API`
+- **Name**: `audio-transcription-api`
+- **API Url Suffix**: `audios-transcriptions`
+
+![API Details](assets/apim-import-function-detail-form.png)
+
+ You can now click on the **Create** button.
+
+ You should see the new API in the list of APIs in your APIM instance.
+
+</details>
+
+### What's happen behind the scene?
+
+If you navigate to the **Backends** section of your APIM you should see a line pointing to the Azure Function App you just imported:
+
+![APIM Backend](assets/apim-backends-list.png)
+
+This is a declaration of the Azure Function App as a backend in APIM. This will allow you to call the Azure Function from the API Gateway.
+
+Now, inside the **Named values** section of the APIM you should see a line which represent the storage of the Azure Function **Host keys** to authorize the APIM to call the Azure Function:
+
+![APIM Named Values](assets/apim-named-value-key.png)
+
+This key was created automatically by Azure, if you go in your Azure Function, inside **Functions** > **App keys** you will see an access given to the APIM instance:
+
+![Function App Key](assets/apim-azure-function-host-keys.png)
+
+So now the APIM instance can call the Azure Function with this key hidden for the user.
+
+When defining an API on APIM you can protect it using different methods like OAuth 2.0, Subscription keys, etc.
+
+If you go to your definition of the API in APIM, in the **Settings** tab you will see the **Subscription required** option. This option allows you to protect your API with a subscription key which should be passed in the header or in the query string of the request:
+
+![APIM Subscription Key](assets/apim-api-settings.png)
+
+You can specify the **Subscription key header name** and the **Subscription key query string name** to define how the subscription key should be passed in the request.
+
+## Call your API
+
+### Test inside APIM
+
+<div class="task" data-title="Tasks">
+
+> Test your API inside Azure API Management and upload a new audio file .
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+Select your API in the **APIs** section of your APIM instance and click on the **Test** tab:
+
+![APIM Test](assets/apim-select-api-for-testing.png)
+
+In the `Request Body` section of the request, select **Binary** and select your audio file to upload. Then click on the **Send** button.
+
+You should see the result of the call with the status code of `200` and the response body like this:
+
+![APIM Test call result](assets/apim-test-call-result.png)
+
+By calling the API from this menu, APIM is automatically adding the subscription key in the header of the request to call the Azure Function. You can see the detail of the request by clicking on the **Trace** button to run the request with all the details of the call. You will see it in the **Trace** tab of the `HTTP response` section.
+
+</details>
+
+### Test inside Postman
+
+
+[import-azure-function-azure-api-management]: https://learn.microsoft.com/en-us/azure/api-management/import-function-app-as-api
 
 ---
 
