@@ -1408,6 +1408,21 @@ By calling the API from this menu, APIM is automatically adding the subscription
 
 ### Test inside Postman
 
+Let's test this in Postman to see how it works. Open the Postman application and copy paste the URL from your API in APIM. It should be inside the **Test** tab:
+
+![APIM Test URL](assets/apim-test-tab-url.png)
+
+In Postman, create a new request and paste the URL in the URL field. Select the **Body** tab and select **form-data** as the type of the body. Then define `audios` as a key and select your audio file to upload.
+
+Run the request and you should see a `401` status code because you need to add the subscription key in the header of the request. In fact the APIM give you the possibility to protect your API with a subscription key.
+
+To do so, go back to your APIM instance and select the **Subscriptions** tab and click on the **+ Add Subscription** button to create a new subscription key dedicated to your API:
+
+![APIM Add Subscription](assets/apim-create-api-subscription-key.png)
+
+Then you can copy the subscription key and add it in the header of your request in Postman in the `Ocp-Apim-Subscription-Key` key. Run the request again and you should see a `200` status code:
+
+![Postman Test](assets/apim-postman-sucess-result.png)
 
 [import-azure-function-azure-api-management]: https://learn.microsoft.com/en-us/azure/api-management/import-function-app-as-api
 
