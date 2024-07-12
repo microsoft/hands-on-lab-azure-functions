@@ -21,6 +21,8 @@ resource "azurerm_linux_function_app" "standard" {
     COSMOS_DB_DATABASE_NAME               = local.cosmos_db_database_name
     COSMOS_DB_CONTAINER_ID                = local.cosmos_db_container_name
     COSMOS_DB_CONNECTION_STRING           = azurerm_cosmosdb_account.this.primary_sql_connection_string
+    ERROR_RATE                            = 0
+    LATENCY_IN_SECONDS                    = 0
   }
 
   site_config {

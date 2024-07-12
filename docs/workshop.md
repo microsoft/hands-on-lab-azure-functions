@@ -66,7 +66,7 @@ Before starting this lab, be sure to set your Azure environment :
 
 - An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code. If not possible the **Contributor** role will be enough to deploy the resources but without the ability to create a Managed Identity.
 - A dedicated resource group for this lab to ease the cleanup at the end.
-- Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`.
+- Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`.
 
 
 To retrieve the lab content :
@@ -193,6 +193,8 @@ az provider register --namespace 'Microsoft.DocumentDB'
 az provider register --namespace 'Microsoft.ApiManagement'
 # Azure Functions
 az provider register --namespace 'Microsoft.Web'
+# Azure Load Test Service
+az provider register --namespace 'Microsoft.LoadTestService'
 ```
 
 </details>
@@ -634,25 +636,13 @@ By now you should have a solution that deploy the Azure Function App using GitHu
 
 ---
 
-# Lab 3 : Monitor your Azure Functions
-
-TODO: Monitor your Azure Functions using the Azure Portal. Discover the metrics and why not simulate a failure to see how the logs are displayed.
-
----
-
-# Lab 4 : Secure your Azure Functions with Managed Identity
+# Lab 3 : Secure your Azure Functions with Managed Identity
 
 TODO: Update the Azure Function to use a Managed Identity to access the Azure Storage Account
 
 ---
 
-# Lab 5 : Retry - Reliability
-
-TODO: To define
-
----
-
-# Lab 6 : Process the audio file with an Azure Durable Function
+# Lab 4 : Process the audio file with an Azure Durable Function
  
 To process the audio file, extract the transcript and save it to Azure Cosmos DB, you will need to create a Durable Function. Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
@@ -1285,7 +1275,7 @@ You can now validate the entire workflow : delete and upload once again the audi
 
 ![Cosmos Db Explorer](assets/cosmos-db-explorer.png)
 
-## Lab 6 : Summary
+## Lab 4 : Summary
 
 By now you should have a solution that :
 
@@ -1304,7 +1294,84 @@ By now you should have a solution that :
 
 ---
 
-# Lab 7 : Integrate the Azure Functions with APIM
+# Lab 5 : Monitor your Azure Functions
+
+Let's now focus on monitoring the Azure Functions. Azure Application Insights provides a monitoring and logging solution that allows you to monitor the performance and health of your functions. You can use the Azure portal to monitor your functions, view logs, and troubleshoot issues.
+
+## Use Azure Load Testing to simulate the load
+
+Using Azure Load Testing can help identify potential issues (e.g. errors and latency) very early and reduce the impact of these issues on your users.
+
+Azure Load Testing is a cloud-based service provided by Azure that allows developers to simulate high volumes of user traffic on their applications. This service is designed to identify potential performance bottlenecks and ensure that applications can handle high loads, especially during peak times.
+
+Benefits of Azure Load Testing:
+
+- **Scalability**: Azure Load Testing can simulate thousands to millions of virtual users, allowing you to test your application under various load conditions.
+- **Ease of Use**: With its intuitive interface and pre-configured test templates, Azure Load Testing makes it easy to set up and run load tests.
+- **Detailed Reporting**: Azure Load Testing provides detailed reports and real-time analytics, helping you identify and resolve performance bottlenecks.
+- **Cost-Effective**: With Azure Load Testing, you only pay for what you use. This makes it a cost-effective solution for load testing.
+
+Integration with other services:
+
+Azure Load Testing integrates seamlessly with other Azure services. For instance, it can be used in conjunction with Azure Monitor and Application Insights to provide detailed performance metrics and insights. 
+
+<div class="task" data-title="Task">
+
+> - Create a Load test for the `AudioUpload` endpoint
+> - Limit the duration of the test to **3 minutes**
+
+</div>
+
+<div class="tip" data-title="Tips">
+
+> Use the direct integration of [Azure Load Testing with Azure Functions][azure-load-testing-setup]
+
+</div>
+
+<details>
+
+<summary>📚 Toggle solution</summary>
+
+1. Locate the Function App in the Azure Portal which start with `func-std`
+1. Click on the `Load Testing (Preview)` blade
+1. Click on the `Create test` button
+1. Select the existing Azure Load Testing resource for your resource group and provide a short name and description of the test
+1. Click on `Add request`
+1. Make sure the pre-populated request points to your Function endpoint and uses the right HTTP method (`POST`)
+1. Select the body tab, set the `Data type` value to `JSON view`, and paste the request body used in the file `test.http`
+1. Valide the request using the `Add` button
+1. Select the tab `Load configuration` and set `Test duration (minutes)` to 3
+1. Click on `Review + create` then on `Create`
+1. The test will take few seconds to get created and then you should see a popup telling you that the test has started
+
+</details>
+
+As the test starts, you will see a `Load test results` dashboard with various metrics like the total number of requests, throughput, and error percentage.
+
+<div class="task" data-title="Task">
+
+> - Find out the average response time ?
+
+</div>
+
+<details>
+
+<summary>📚 Toggle solution</summary>
+
+1. Locate the `Aggregation` filter in the `Client-side metrics` panel
+1. Uncheck existing selection, select `Average`, then click on `Apply`
+1. Locate the metric below the graph in `Response time (successful responses)`. That is the average response time.
+
+</details>
+
+[azure-load-testing-setup]:  https://learn.microsoft.com/en-us/azure/load-testing/how-to-create-load-test-function-app
+
+
+## Lab 5 : Summary
+
+---
+
+# Lab 6 : Integrate the Azure Functions with APIM
 
 Let's now integrate the Azure Functions with Azure API Management (APIM) to expose the transcription of the audio file as an API. 
 
@@ -1432,13 +1499,24 @@ Then you can copy the subscription key and add it in the header of your request 
 
 ![Postman Test](assets/apim-postman-sucess-result.png)
 
+
+## Lab 6 : Summary
+
 [import-azure-function-azure-api-management]: https://learn.microsoft.com/en-us/azure/api-management/import-function-app-as-api
 
 ---
 
-# Lab 8 : Use Azure Functions for Azure Open AI
+# Lab 7 : Use Azure Functions for Azure Open AI
 
 TODO: Add an Azure Functions connected to Cosmos DB and Azure Open AI to analyse and add informations into the new entry.
+
+## Lab 7 : Summary
+
+---
+
+# Lab 8 : Azure Functions Flex Consumption Plan
+
+## Lab 8 : Summary
 
 ---
 
