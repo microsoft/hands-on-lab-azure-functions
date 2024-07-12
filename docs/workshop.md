@@ -1322,9 +1322,24 @@ Integration with other services:
 
 Azure Load Testing integrates seamlessly with other Azure services. For instance, it can be used in conjunction with Azure Monitor and Application Insights to provide detailed performance metrics and insights. 
 
+
+## Add a new endpoint to your Azure Function App
+
+Let's add a new endpoint to your Azure Function App to get the audio transcription and use Azure Load Testing to simulate the load on this endpoint.
+
+In the `FuncStd` add a new file called `Transcriptions.cs` with the following content:
+
+```csharp
+TODO
+```
+
+Redeploy the `func-std` Function App to add this new endpoint.
+
+## Create a Load test for the new endpoint
+
 <div class="task" data-title="Task">
 
-> - Create a Load test for the `AudioUpload` endpoint
+> - Create a Load test for the `GetTranscription` endpoint
 > - Limit the duration of the test to **3 minutes**
 
 </div>
@@ -1344,9 +1359,8 @@ Azure Load Testing integrates seamlessly with other Azure services. For instance
 1. Click on the `Create test` button
 1. Select the existing Azure Load Testing resource for your resource group and provide a short name and description of the test
 1. Click on `Add request`
-1. Make sure the pre-populated request points to your Function endpoint and uses the right HTTP method (`POST`)
-1. Select the body tab, set the `Data type` value to `JSON view`, and paste the request body used in the file `test.http`
-1. Valide the request using the `Add` button
+1. Make sure the pre-populated request points to your Function endpoint and uses the right HTTP method (`GET`)
+1. Validate the request using the `Add` button
 1. Select the tab `Load configuration` and set `Test duration (minutes)` to 3
 1. Click on `Review + create` then on `Create`
 1. The test will take few seconds to get created and then you should see a popup telling you that the test has started
@@ -1371,10 +1385,40 @@ As the test starts, you will see a `Load test results` dashboard with various me
 
 </details>
 
+You know have a way to monitor the performance of your Azure Function and identify potential issues before they impact your users.
+
+## Simulate errors
+
+To simulate errors, you can see that in the `Transcriptions.cs` file you have a call to the `Chaos.Start()` method which will throw an exception randomly.
+
+If you open the `Chaos.cs` file you will see that you have 2 environments variables `ERROR_RATE` and `LATENCY_IN_SECONDS` which are used to enable the chaos and set the error rate and latency.
+
+Those environment variables are already set in the Azure Function App settings (`func-std-<your-instance-name>`) when you deployed the infrastructure previously.
+
+Let's start by playing with the `ERROR_RATE` environment variable to simulate errors. Go to your Azure Function instance (`func-std-<your-instance-name>`), inside **Settings** > **Environment variables** > **App Settings** and set the `ERROR_RATE` to `50` to simulate 50% of errors.
+
+![Set Error Rate](assets/azure-function-app-error-rate.png) TODO
+
+Now, if you run the load test again you should see that 50% of the requests are failing.
+
+TODO: ADD image and explanations.
+
+## Simulate latency
+
+Now let's reset the `ERROR_RATE` environment variable to `0` to disable the errors and simulate latency. Set the `LATENCY_IN_SECONDS` to `3` to simulate a latency of 3 seconds.
+
+If you run the load test again you should see that the average response time is now increasing. 
+
+TODO: ADD image and explanations around the performance tab.
+
+Reset the `LATENCY_IN_SECONDS` environment variable to `0` to disable the latency.
+
 [azure-load-testing-setup]:  https://learn.microsoft.com/en-us/azure/load-testing/how-to-create-load-test-function-app
 
 
 ## Lab 5 : Summary
+
+AS you can see, Azure Load Testing is a powerful tool that allows you to simulate high volumes of user traffic on your applications and identify potential performance bottlenecks. By using Azure Load Testing, you can ensure that your applications can handle high loads and provide a seamless user experience.
 
 ---
 
@@ -1508,6 +1552,8 @@ Then you can copy the subscription key and add it in the header of your request 
 
 
 ## Lab 6 : Summary
+
+At the end of this lab you should have an Azure Function exposed as an API in Azure API Management. You should be able to call this API with a subscription key to upload an audio file to the storage account.
 
 [import-azure-function-azure-api-management]: https://learn.microsoft.com/en-us/azure/api-management/import-function-app-as-api
 
