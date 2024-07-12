@@ -31,9 +31,6 @@ namespace FuncStd
         {
             _logger.LogInformation("Processing a new audio file upload request");
 
-            // Simulate unexpected bahaviors
-            UnexpectedBehaviors.Simulate();
-
             // Get the first file in the form
             byte[]? audioFileData = null;
             var file = req.Form.Files[0];

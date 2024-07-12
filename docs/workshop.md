@@ -27,11 +27,11 @@ During this workshop you will have the instructions to complete each steps. It i
 
 <div class="task" data-title="Task">
 
-> You will find the instructions and expected configurations for each Lab step in these yellow **TASK** boxes.
-> Inputs and parameters to select will be defined, all the rest can remain as default as it has no impact on the scenario.
+> - You will find the instructions and expected configurations for each Lab step in these yellow **TASK** boxes.
+> - Inputs and parameters to select will be defined, all the rest can remain as default as it has no impact on the scenario.
 >
-> Log into your Azure subscription locally using Azure CLI and on the [Azure Portal][az-portal] using your own credentials.
-> Instructions and solutions will be given for the Azure CLI, but you can also use the Azure Portal if you prefer.
+> - Log into your Azure subscription locally using Azure CLI and on the [Azure Portal][az-portal] using your own credentials.
+> - Instructions and solutions will be given for the Azure CLI, but you can also use the Azure Portal if you prefer.
 
 </div>
 
@@ -81,9 +81,9 @@ To retrieve the lab content :
 
 <div class="tip" data-title="Tips">
 
-> To focus on the main purpose of the lab, we encourage the usage of devcontainers/codespace as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
+> - To focus on the main purpose of the lab, we encourage the usage of devcontainers/codespace as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
 > 
-> You could decide to run everything without relying on a devcontainer : To do so, make sure you install all the prerequisites detailed below.
+> - You could decide to run everything without relying on a devcontainer : To do so, make sure you install all the prerequisites detailed below.
 
 </div>
 
@@ -283,20 +283,20 @@ At this stage in our scenario, the goal is to upload an audio into the Storage A
 
 <div class="task" data-title="Tasks">
 
-> Create an `Azure Function` with a POST `HTTP Trigger` and a `Blob Output Binding` to upload the file to the Storage Account. The Blob Output Binding will use a `binding expression` to generate a unique `GUID` name for the file.
+> - Create an `Azure Function` with a POST `HTTP Trigger` and a `Blob Output Binding` to upload the file to the Storage Account. The Blob Output Binding will use a `binding expression` to generate a unique `GUID` name for the file.
 >
-> Use the `func` CLI tool and .NET 8 using the isolated mode to create this Azure Function
+> - Use the `func` CLI tool and .NET 8 using the isolated mode to create this Azure Function
 
 </div>
 
 <div class="tip" data-title="Tips">
 
-> [Azure Functions][azure-function]<br> 
-> [Azure Function Core Tools][azure-function-core-tools]<br> 
-> [Basics of Azure Functions][azure-function-basics]<br> 
-> [HTTP Triggered Azure Function][azure-function-http]<br>
-> [Blob Output Binding][azure-function-blob-output]<br> 
-> [Azure Functions Binding Expressions][azure-function-bindings-expression]
+> - [Azure Functions][azure-function]<br> 
+> - [Azure Function Core Tools][azure-function-core-tools]<br> 
+> - [Basics of Azure Functions][azure-function-basics]<br> 
+> - [HTTP Triggered Azure Function][azure-function-http]<br>
+> - [Blob Output Binding][azure-function-blob-output]<br> 
+> - [Azure Functions Binding Expressions][azure-function-bindings-expression]
 
 </div>
 
@@ -428,8 +428,8 @@ func start
 
 <div class="tip" data-title="Tips">
 
-> If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
-> Please refer to this [port forwarding guide on Github Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace#using-command-line-tools-and-rest-clients-to-access-ports) for more details.
+> - If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
+> - Please refer to this [port forwarding guide on Github Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace#using-command-line-tools-and-rest-clients-to-access-ports) for more details.
 
 </div>
 
@@ -510,13 +510,13 @@ The goal is to automate the deployment of this Function App usin  GitHub Actions
 
 <div class="task" data-title="Tasks">
 
-> Inside the Azure Function App on Azure Portal which start by `func-std`, go to the `Deployment Center` and try to setup a GitHub Actions workflow to deploy the Azure Functions from the `FuncStd` folder.
+> - Inside the Azure Function App on Azure Portal which start by `func-std`, go to the `Deployment Center` and try to setup a GitHub Actions workflow to deploy the Azure Functions from the `FuncStd` folder.
 
 </div>
 
 <div class="tip" data-title="Tips">
 
-> [Azure Functions Deployment Center][azure-function-deployment-center]<br>
+> - [Azure Functions Deployment Center][azure-function-deployment-center]<br>
 
 </div>
 
@@ -645,7 +645,79 @@ By now you should have a solution that deploy the Azure Function App using GitHu
 
 # Lab 3 : Secure your Azure Functions with Managed Identity
 
-TODO: Update the Azure Function to use a Managed Identity to access the Azure Storage Account
+In the previous labs, you have created an Azure Function App and deployed it using GitHub Actions. 
+
+In the first lab, you have created an Azure Function to upload an audio file to a Storage Account, but you have used a connection string to access the Storage Account. This is not the best practice as the connection string is a sensitive information.
+
+Using managed identities in Azure offers several key benefits:
+
+- **Enhanced Security**: Managed identities eliminate the need to store credentials in your code, reducing the risk of accidental leaks or breaches.
+- **Simplified Credential Management**: Azure automatically handles the lifecycle of these identities, so you don’t need to manually manage secrets, passwords, or keys.
+- **Seamless Integration**: Managed identities can authenticate to any Azure service that supports Microsoft Entra ID authentication, making it easier to connect and secure your applications.
+- **Cost Efficiency**: There are no additional charges for using managed identities, making it a cost-effective solution for securing your Azure resources.
+
+In this lab, you will update your Azure Function to secure the access to the Azure Storage Account using a Managed Identity.
+
+## Use a Managed Identity
+
+<div class="task" data-title="Tasks">
+
+> - Assign the role of `Storage Blob Data Owner` to your Azure Function app identity.
+> - Update the `Connection` parameter of the `AudioUploadOutput` class to `AudioUploadStorage`
+> - Setup the environment variables in the Azure Function App to use the Managed Identity to access the Storage Account.
+
+</div>
+
+<div class="tip" data-title="Tips">
+
+> - [Azure Managed Identity setup][azure-managed-identity]<br>
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+### Update the Blob Output Binding
+
+In your `AudioUpload.cs` file, you will need to update the `BlobOutput` attribute of the `AudioUploadOutput` class to use the `AudioUploadStorage` connection.
+
+This name will be then concatenated with the `__serviceUri` environment variable to create the full URI of the Storage Account where you have uploaded your files, so the managed identity can access it.
+
+Redeploy your Azure Function App using GitHub Actions or manually.
+
+### Assign the role to the Managed Identity
+
+In the Storage Account resource where you have uploaded your audio file previously, go to the `Access control (IAM)` tab and click on `+ Add` and then `Add role assignment` button.
+
+In the **Role** tab select `Storage Blob Data Owner`, then in the **Members** tab select **Managed Identity** for the name of your Azure Function App and select it:
+
+![Assign role to Managed Identity](assets/managed-identity-add-role.png)
+
+Finally click on the **Review + assign** button.
+
+### Update environment variables
+
+In the Azure Function App resource with the name starting with `func-std`, go to the **Settings** tab and **Environment variables**, in the **App settings** tab, add a new environment variable with the name `AudioUploadStorage__serviceUri` and set the value to:
+
+```sh
+https://YOUR_STORAGE_ACCOUNT_NAME.blob.core.windows.net
+```
+
+Of course, make sure to replace `YOUR_STORAGE_ACCOUNT_NAME` with the name of your storage account:
+
+![Add environment variable](assets/managed-identity-add-environment-variable.png)
+
+Finally, remove the old `STORAGE_ACCOUNT_CONNECTION_STRING` environment variable so that the Azure Function App will use the Managed Identity to access the Storage Account.
+
+Try to upload a new audio file using Postman to make sure that the Managed Identity is working correctly.
+
+</details>
+
+## Lab 3 : Summary
+
+In this lab you have secured the access to the Azure Storage Account using a Managed Identity. Now you don't need to worry about storing the connection string in your Azure Function App, the Managed Identity will take care of the authentication.
+
+[azure-managed-identity]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cisolated-process%2Cnodejs-v4&pivots=programming-language-csharp#identity-based-connections
 
 ---
 
@@ -674,9 +746,9 @@ Now you have the audio file uploaded in the storage account, you will need to de
 
 <div class="tip" data-title="Tips">
 
-> [Azure Functions][azure-function]<br>
-> [Azure Functions Binding Expressions][azure-function-bindings-expression]<br>
-> [Azure Function Blob Triggered][azure-function-blob-trigger]<br>
+> - [Azure Functions][azure-function]<br>
+> - [Azure Functions Binding Expressions][azure-function-bindings-expression]<br>
+> - [Azure Function Blob Triggered][azure-function-blob-trigger]<br>
 
 </div>
 
@@ -836,10 +908,10 @@ You now want to retrieve the transcript out of the audio file uploaded thanks to
 
 <div class="tip" data-title="Tips">
 
-> [What are Cognitive Services][cognitive-services]<br>
-> [Cognitive Service Getting Started][cognitive-service-api]<br> 
-> [Batch endpoint Speech to Text API][speech-to-text-batch-endpoint]<br>
-> [Monitor pattern Durable Function][monitor-pattern-durable-functions]<br>
+> - [What are Cognitive Services][cognitive-services]<br>
+> - [Cognitive Service Getting Started][cognitive-service-api]<br> 
+> - [Batch endpoint Speech to Text API][speech-to-text-batch-endpoint]<br>
+> - [Monitor pattern Durable Function][monitor-pattern-durable-functions]<br>
 
 </div>
 
@@ -1199,8 +1271,8 @@ You now have a transcription of your audio file, next step is to store it in a N
 
 <div class="tip" data-title="Tips">
 
-> [Serverless Cosmos DB][cosmos-db]<br>
-> [Cosmos DB Output Binding][cosmos-db-output-binding]
+> - [Serverless Cosmos DB][cosmos-db]<br>
+> - [Cosmos DB Output Binding][cosmos-db-output-binding]
 
 </div>
 
@@ -1327,11 +1399,103 @@ Azure Load Testing integrates seamlessly with other Azure services. For instance
 
 Let's add a new endpoint to your Azure Function App to get the audio transcription and use Azure Load Testing to simulate the load on this endpoint.
 
-In the `FuncStd` add a new file called `Transcriptions.cs` with the following content:
+In the `FuncStd` add a new file called `GetTranscriptions.cs` with the following content:
+
+<details>
+<summary>📄 GetTranscriptions.cs</summary>
 
 ```csharp
-TODO
+using System.Net;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
+namespace FuncStd
+{
+    public class GetTranscriptions
+    {
+        private readonly ILogger _logger;
+
+        public GetTranscriptions(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<GetTranscriptions>();
+        }
+
+        [Function(nameof(GetTranscriptions))]
+        public HttpResponseData Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
+            [CosmosDBInput(
+                databaseName: "%COSMOS_DB_DATABASE_NAME%",
+                containerName: "%COSMOS_DB_CONTAINER_ID%",
+                Connection = "TranscriptionsDatabase",
+                SqlQuery = "SELECT * FROM c ORDER BY c._ts DESC OFFSET 0 LIMIT 50")
+            ] IEnumerable<Transcription> transcriptions
+        )
+        {
+            _logger.LogInformation("C# HTTP trigger function processed a request.");
+
+            // Simulate unexpected bahaviors
+            UnexpectedBehaviors.Simulate();
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "application/json");
+
+            string jsonData = JsonSerializer.Serialize(transcriptions);
+
+            response.WriteString(jsonData);
+
+            return response;
+        }
+    }
+}
 ```
+
+</details>
+
+<details>
+<summary>📄 UnexpectedBehaviors.cs</summary>
+
+```csharp
+namespace FuncStd
+{
+    public static class UnexpectedBehaviors
+    {
+        private static int _errorRate = 0;
+        private static int _latencyInSeconds = 0;
+
+        static UnexpectedBehaviors()
+        {
+            // Get the error rate from the environment variables
+            if (!Int32.TryParse(Environment.GetEnvironmentVariable("ERROR_RATE"), out _errorRate))
+            {
+                _errorRate = 0;
+            }
+
+            // Get the extra injected latency from the environment variables
+            if (!Int32.TryParse(Environment.GetEnvironmentVariable("LATENCY_IN_SECONDS"), out _latencyInSeconds))
+            {
+                _latencyInSeconds = 0;
+            }
+        }
+
+        public static void Simulate()
+        {
+            // Simulating latency: sleep for _latencyInSeconds seconds
+            if (_latencyInSeconds != 0) {
+                Thread.Sleep(_latencyInSeconds * 1000);
+            }
+
+            // Simulating errors: throw errors with a probability of _errorRate
+            if (_errorRate != 0 && Random.Shared.Next(0, 100) < _errorRate) {
+                throw new Exception("Simulated error!");
+            }
+        }
+    }
+}
+```
+
+</details>
 
 Redeploy the `func-std` Function App to add this new endpoint.
 
@@ -1346,7 +1510,7 @@ Redeploy the `func-std` Function App to add this new endpoint.
 
 <div class="tip" data-title="Tips">
 
-> Use the direct integration of [Azure Load Testing with Azure Functions][azure-load-testing-setup]
+> - Use the direct integration of [Azure Load Testing with Azure Functions][azure-load-testing-setup]
 
 </div>
 
@@ -1389,9 +1553,9 @@ You know have a way to monitor the performance of your Azure Function and identi
 
 ## Simulate errors
 
-To simulate errors, you can see that in the `Transcriptions.cs` file you have a call to the `Chaos.Start()` method which will throw an exception randomly.
+To simulate errors, you can see that in the `Transcriptions.cs` file you have a call to the `UnexpectedBehaviors.Simulate()` method which will throw an exception randomly.
 
-If you open the `Chaos.cs` file you will see that you have 2 environments variables `ERROR_RATE` and `LATENCY_IN_SECONDS` which are used to enable the chaos and set the error rate and latency.
+If you open the `UnexpectedBehaviors.cs` file you will see that you have 2 environments variables `ERROR_RATE` and `LATENCY_IN_SECONDS` which are used to enable the chaos and set the error rate and latency.
 
 Those environment variables are already set in the Azure Function App settings (`func-std-<your-instance-name>`) when you deployed the infrastructure previously.
 
@@ -1440,13 +1604,13 @@ Inside your resource group, you should see an APIM instance. Click on it, you wi
 
 <div class="task" data-title="Tasks">
 
-> Define your Azure Function as an API in Azure API Management.
+> - Define your Azure Function as an API in Azure API Management.
 
 </div>
 
 <div class="tip" data-title="Tips">
 
-> [Import Azure Function Azure API Management][import-azure-function-azure-api-management]<br>
+> - [Import Azure Function Azure API Management][import-azure-function-azure-api-management]<br>
 
 </div>
 
@@ -1511,7 +1675,7 @@ You can specify the **Subscription key header name** and the **Subscription key 
 
 <div class="task" data-title="Tasks">
 
-> Test your API inside Azure API Management and upload a new audio file .
+> - Test your API inside Azure API Management and upload a new audio file .
 
 </div>
 
