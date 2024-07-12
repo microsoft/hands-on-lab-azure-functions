@@ -34,7 +34,10 @@
         "ms-dotnettools.csharp", 
         "ms-dotnettools.csdevkit",
         // Terraform
-        "hashicorp.terraform"
+        "hashicorp.terraform",
+        // Github
+        "GitHub.vscode-github-actions",
+        "github.copilot"
       ]
     }
   },
