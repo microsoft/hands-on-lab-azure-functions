@@ -8,7 +8,7 @@ namespace FuncStd
 
     public class AudioUploadOutput
     {
-        [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection="STORAGE_ACCOUNT_CONNECTION_STRING")]
+        [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection="AudioUploadStorage")]
         public byte[]? Blob { get; set; }
 
         [HttpResult]

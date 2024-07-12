@@ -1267,7 +1267,7 @@ Those configuration are already set in the Azure Function App settings (`func-dr
 
 If you run the function locally and upload an audio file, you should see the different steps of the orchestration in the logs and the transcription of the audio file.
 
-If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions/FuncDrbl`.
+If necessary the source code with the solutions can be found in this Github Repository, under `./solutions/lab4/FuncDrbl`.
 
 </details>
 
@@ -1299,7 +1299,7 @@ You now have a transcription of your audio file, next step is to store it in a N
 Because you need to connect to Azure Cosmos DB with the `CosmosDBOutput` binding you need to first add the associated Nuget Package:
 
 ```bash
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.8.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
 ```
 
 Then to store the transcription of the audio file in Cosmos DB, you will need to create a new `Activity Function` called `SaveTranscription` in the `AudioTranscriptionOrchestration.cs` file and apply the `CosmosDBOutput` binding to store the data in the Cosmos DB:
@@ -1421,11 +1421,10 @@ In the `FuncStd` add a new file called `GetTranscriptions.cs` with the following
 <summary>📄 GetTranscriptions.cs</summary>
 
 ```csharp
-using System.Net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace FuncStd
 {
@@ -1439,8 +1438,8 @@ namespace FuncStd
         }
 
         [Function(nameof(GetTranscriptions))]
-        public HttpResponseData Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
+        public IActionResult Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req,
             [CosmosDBInput(
                 databaseName: "%COSMOS_DB_DATABASE_NAME%",
                 containerName: "%COSMOS_DB_CONTAINER_ID%",
@@ -1454,14 +1453,7 @@ namespace FuncStd
             // Simulate unexpected bahaviors
             UnexpectedBehaviors.Simulate();
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/json");
-
-            string jsonData = JsonSerializer.Serialize(transcriptions);
-
-            response.WriteString(jsonData);
-
-            return response;
+            return  new JsonResult(transcriptions);
         }
     }
 }
@@ -1539,7 +1531,7 @@ namespace FuncStd
 Finally add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget package to your project by running the following command:
 
 ```sh
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.8.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
 ```
 
 Redeploy the `func-std` Function App to add this new endpoint manually or using your GitHub Actions workflow.
@@ -1613,9 +1605,9 @@ You know have a way to monitor the performance of your Azure Function and identi
 
 ## Simulate errors
 
-To simulate errors, you can see that in the `Transcriptions.cs` file you have a call to the `UnexpectedBehaviors.Simulate()` method which will throw an exception randomly.
+To simulate errors, you can see that in the `GetTranscriptions.cs` file you have a call to the `UnexpectedBehaviors.Simulate()` method which will throw an exception randomly.
 
-If you open the `UnexpectedBehaviors.cs` file you will see that you have 2 environments variables `ERROR_RATE` and `LATENCY_IN_SECONDS` which are used to enable the chaos and set the error rate and latency.
+If you open the `UnexpectedBehaviors.cs` file you will see that you have 2 environments variables `ERROR_RATE` and `LATENCY_IN_SECONDS` which are used to set the error rate and latency.
 
 Those environment variables are already set in the Azure Function App settings (`func-std-<your-instance-name>`) when you deployed the infrastructure previously.
 
@@ -1664,7 +1656,7 @@ Inside your resource group, you should see an APIM instance. Click on it, you wi
 
 <div class="task" data-title="Tasks">
 
-> - Define your Azure Function as an API in Azure API Management.
+> - Define the Azure Function (`func-std-`) endpoints as an API in Azure API Management.
 
 </div>
 
@@ -1687,7 +1679,7 @@ In the popup menu to create a Function select **Browse**, this will redirect you
 
 ![Select Function](assets/apim-select-function-app.png)
 
-Then you will see automatically the list of endpoints, select the **AudioUpload** and click on the **Select** button.
+Then you will see automatically the list of endpoints, select the **AudioUpload** and the **GetTranscriptions** endpoints and click on the **Select** button.
 
 This will fill all the information needed to create the API in APIM, let's update the API details to have something more meaningful.
 
@@ -1727,7 +1719,7 @@ If you go to your definition of the API in APIM, in the **Settings** tab you wil
 
 ![APIM Subscription Key](assets/apim-api-settings.png)
 
-You can specify the **Subscription key header name** and the **Subscription key query string name** to define how the subscription key should be passed in the request.
+You can specify the **Subscription key header name** and the **Subscription key query parameter name** to define how the subscription key should be passed in the request.
 
 ## Call your API
 
@@ -1742,7 +1734,7 @@ You can specify the **Subscription key header name** and the **Subscription key 
 <details>
 <summary>📚 Toggle solution</summary>
 
-Select your API in the **APIs** section of your APIM instance and click on the **Test** tab:
+Select your API in the **APIs** section of your APIM instance and click on the **Test** tab, and let's test the `AudioUpload` endpoint:
 
 ![APIM Test](assets/apim-select-api-for-testing.png)
 

@@ -12,8 +12,19 @@ resource "azurerm_role_assignment" "website_contributor_standard_function" {
   principal_id         = azurerm_user_assigned_identity.standard_function[0].principal_id
 }
 
-resource "azurerm_role_assignment" "cosmos_db_acount_reader_standard_function" {
-  scope                = azurerm_cosmosdb_account.this.id
-  role_definition_name = "Cosmos DB Account Reader Role"
-  principal_id         = azurerm_linux_function_app.standard.identity[0].principal_id
+data "azurerm_cosmosdb_sql_role_definition" "cosmos_db_contributor_standard_function" {
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  role_definition_id  = "00000000-0000-0000-0000-000000000002"
+}
+
+resource "random_uuid" "cosmos_db_contributor_uuid" {}
+
+resource "azurerm_cosmosdb_sql_role_assignment" "cosmos_db_contributor_standard_function" {
+  name                = random_uuid.cosmos_db_contributor_uuid.result
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  role_definition_id  = data.azurerm_cosmosdb_sql_role_definition.cosmos_db_contributor_standard_function.id
+  principal_id        = azurerm_linux_function_app.standard.identity[0].principal_id
+  scope               = azurerm_cosmosdb_account.this.id
 }
