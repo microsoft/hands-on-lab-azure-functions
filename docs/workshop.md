@@ -754,11 +754,13 @@ Now you have the audio file uploaded in the storage account, you will need to de
 
 The `Audio.cs` file will be used to create an `AudioFile` object and also an `AudioTranscription` object when the transcription is done, this will be used to store the data in Cosmos DB in the next step.
 
+<details>
+<summary>📄 Audio.cs</summary>
+
 ```csharp
-// Audio.cs
 using System.Text.Json.Serialization;
 
-namespace YOUR_NAMESPACE_HERE
+namespace FuncDurable
 {
     public abstract class Audio
     {
@@ -789,14 +791,16 @@ namespace YOUR_NAMESPACE_HERE
     }
 }
 ```
+</details>
+
 
 <details>
 <summary>📚 Toggle solution</summary>
 
 ```bash
 # Create a folder for your function app and navigate to it
-mkdir <function-app-name>
-cd <function-app-name>
+mkdir FuncDurable
+cd FuncDurable
 
 # Create the new function app as a .NET 8 Isolated project
 # No need to specify a name, the folder name will be used by default
@@ -824,7 +828,7 @@ using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 
-namespace YOUR_NAMESPACE_HERE
+namespace FuncDurable
 {
     public static class AudioTranscriptionOrchestration
     {
@@ -917,8 +921,11 @@ You now want to retrieve the transcript out of the audio file uploaded thanks to
 
 This is the definition of the `Transcription.cs` file:
 
+<details>
+<summary>📄 Transcription.cs</summary>
+
 ```csharp
-namespace YOUR_NAMESPACE_HERE
+namespace FuncDurable
 {
     public class TranscriptionJobFiles
     {
@@ -961,14 +968,18 @@ namespace YOUR_NAMESPACE_HERE
     }
 }
 ```
+</details>
 
 Here is the content of the `SpeechToTextService.cs` file:
+
+<details>
+<summary>📄 SpeechToTextService.cs</summary>
 
 ```csharp
 using System.Text;
 using System.Text.Json;
 
-namespace YOUR_NAMESPACE_HERE
+namespace FuncDurable
 {
     public static class SpeechToTextService
     {
@@ -1076,8 +1087,12 @@ namespace YOUR_NAMESPACE_HERE
     }
 }
 ```
+</details>
 
 Below is the orchestration part of the `AudioTranscriptionOrchestration.cs` file where you will have to implement the different steps of the orchestration marked by `TODO`:
+
+<details>
+<summary>📄 AudioTranscriptionOrchestration.cs</summary>
 
 ```csharp
 [Function(nameof(AudioTranscriptionOrchestration))]
@@ -1141,6 +1156,8 @@ public static async Task<string?> GetTranscription([ActivityTrigger] AudioFile a
     // TODO: Call the Speech To Text service to get the transcription
 }
 ```
+
+</details>
 
 <details>
 <summary>📚 Toggle solution</summary>
@@ -1394,10 +1411,9 @@ Integration with other services:
 
 Azure Load Testing integrates seamlessly with other Azure services. For instance, it can be used in conjunction with Azure Monitor and Application Insights to provide detailed performance metrics and insights. 
 
-
 ## Add a new endpoint to your Azure Function App
 
-Let's add a new endpoint to your Azure Function App to get the audio transcription and use Azure Load Testing to simulate the load on this endpoint.
+Let's add a new endpoint to your Azure Function App to get the audio transcriptions and use Azure Load Testing to simulate the load on this endpoint.
 
 In the `FuncStd` add a new file called `GetTranscriptions.cs` with the following content:
 
@@ -1452,6 +1468,29 @@ namespace FuncStd
 ```
 
 </details>
+
+Then add the `Transcription.cs` model file with the following content:
+
+<details>
+<summary>📄 Transcription.cs</summary>
+
+```csharp
+namespace FuncStd
+{
+    public class Transcription
+    {
+        public string id { get; set; }
+        public string path { get; set; }
+        public string result { get; set; }
+        public string status { get; set; }
+        public int _ts { get; set; }
+    }
+}
+```
+
+</details>
+
+Finally, add the `UnexpectedBehaviors.cs` file with the following content to simulate errors and latency:
 
 <details>
 <summary>📄 UnexpectedBehaviors.cs</summary>
