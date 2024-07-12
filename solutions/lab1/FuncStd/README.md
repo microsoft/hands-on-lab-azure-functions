@@ -20,13 +20,6 @@ func new --name AudioUpload --template "HTTP trigger" --authlevel "function"
 dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.3.0
 ```
 
-## Create the GetTranscriptions function
-
-```sh
-func new --name GetTranscriptions --template "HTTP trigger" --authlevel "function"
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.8.0
-```
-
 ## Publishing the Function App
 
 ```sh
