@@ -14,15 +14,16 @@ resource "azurerm_linux_function_app" "standard" {
   }
 
   app_settings = {
-    STORAGE_ACCOUNT_CONTAINER             = local.storage_account_container_name
-    STORAGE_ACCOUNT_CONNECTION_STRING     = azurerm_storage_account.this.primary_connection_string
-    APPINSIGHTS_INSTRUMENTATIONKEY        = azurerm_application_insights.this.instrumentation_key
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.this.connection_string
-    COSMOS_DB_DATABASE_NAME               = local.cosmos_db_database_name
-    COSMOS_DB_CONTAINER_ID                = local.cosmos_db_container_name
-    COSMOS_DB_CONNECTION_STRING           = azurerm_cosmosdb_account.this.primary_sql_connection_string
-    ERROR_RATE                            = 0
-    LATENCY_IN_SECONDS                    = 0
+    STORAGE_ACCOUNT_CONTAINER               = local.storage_account_container_name
+    STORAGE_ACCOUNT_CONNECTION_STRING       = azurerm_storage_account.this.primary_connection_string
+    APPINSIGHTS_INSTRUMENTATIONKEY          = azurerm_application_insights.this.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING   = azurerm_application_insights.this.connection_string
+    COSMOS_DB_DATABASE_NAME                 = local.cosmos_db_database_name
+    COSMOS_DB_CONTAINER_ID                  = local.cosmos_db_container_name
+    COSMOS_DB_CONNECTION_STRING             = azurerm_cosmosdb_account.this.primary_sql_connection_string
+    ERROR_RATE                              = 0
+    LATENCY_IN_SECONDS                      = 0
+    TranscriptionsDatabase__accountEndpoint = azurerm_cosmosdb_account.this.endpoint
   }
 
   site_config {

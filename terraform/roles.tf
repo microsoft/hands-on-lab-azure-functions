@@ -11,3 +11,9 @@ resource "azurerm_role_assignment" "website_contributor_standard_function" {
   role_definition_name = "Website Contributor"
   principal_id         = azurerm_user_assigned_identity.standard_function[0].principal_id
 }
+
+resource "azurerm_role_assignment" "cosmos_db_acount_reader_standard_function" {
+  scope                = azurerm_cosmosdb_account.this.id
+  role_definition_name = "Cosmos DB Account Reader Role"
+  principal_id         = azurerm_linux_function_app.standard.identity[0].principal_id
+}

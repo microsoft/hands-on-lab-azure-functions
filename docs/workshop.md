@@ -1536,13 +1536,25 @@ namespace FuncStd
 
 </details>
 
-Redeploy the `func-std` Function App to add this new endpoint.
+Finally add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget package to your project by running the following command:
 
-## Create a Load test for the new endpoint
+```sh
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.8.0
+```
+
+Redeploy the `func-std` Function App to add this new endpoint manually or using your GitHub Actions workflow.
+
+If the deployment succeed you should see the new function in the Azure Function App:
+
+![New endpoint](assets/monitoring-new-endpoint.png)
+
+If you look at the environment variables of the `func-std` Function App, you will see that the `TranscriptionsDatabase__accountEndpoint` are already set, this is the setup needed to connect to the Cosmos DB. Your Azure Function has also the role of `Cosmos DB Built-in Data Reader` to be able to read the data from the Cosmos DB.
+
+## Create a load test for the new endpoint
 
 <div class="task" data-title="Task">
 
-> - Create a Load test for the `GetTranscription` endpoint
+> - Create a Load test for the `GetTranscriptions` endpoint
 > - Limit the duration of the test to **3 minutes**
 
 </div>
@@ -1560,13 +1572,20 @@ Redeploy the `func-std` Function App to add this new endpoint.
 1. Locate the Function App in the Azure Portal which start with `func-std`
 1. Click on the `Load Testing (Preview)` blade
 1. Click on the `Create test` button
-1. Select the existing Azure Load Testing resource for your resource group and provide a short name and description of the test
+1. Select the existing Azure Load Testing resource for your resource group and provide a short name and description of the test:
+
+![Create test](assets/monitoring-create-test.png)
+
 1. Click on `Add request`
-1. Make sure the pre-populated request points to your Function endpoint and uses the right HTTP method (`GET`)
+1. Make sure to select the `GetTranscriptions` endpoints and uses the right HTTP method (`GET`)
 1. Validate the request using the `Add` button
+
+![Add request](assets/monitoring-get-transcriptions-requests.png)
+
+
 1. Select the tab `Load configuration` and set `Test duration (minutes)` to 3
 1. Click on `Review + create` then on `Create`
-1. The test will take few seconds to get created and then you should see a popup telling you that the test has started
+1. The test will take few seconds to get created and then you should see a popup telling you that the test has started.
 
 </details>
 
@@ -1574,7 +1593,7 @@ As the test starts, you will see a `Load test results` dashboard with various me
 
 <div class="task" data-title="Task">
 
-> - Find out the average response time ?
+> - Find out the average response time of the `GetTranscriptions` endpoint
 
 </div>
 
@@ -1585,6 +1604,8 @@ As the test starts, you will see a `Load test results` dashboard with various me
 1. Locate the `Aggregation` filter in the `Client-side metrics` panel
 1. Uncheck existing selection, select `Average`, then click on `Apply`
 1. Locate the metric below the graph in `Response time (successful responses)`. That is the average response time.
+
+![Average response time](assets/monitoring-average-time-when-succeeded.png)
 
 </details>
 
