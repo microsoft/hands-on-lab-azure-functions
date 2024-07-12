@@ -199,6 +199,13 @@ az provider register --namespace 'Microsoft.LoadTestService'
 
 </details>
 
+### Access to Azure OpenAI
+
+In the Lab 7 we will be using Azure OpenAI to analyse transcriptions.
+Please make sure that you can deploy Azure OpenAI on your subscription if you want to do this lab.
+
+TODO: find a reference/doc pointing to the model access form
+
 ### Deploy the infrastructure
 
 You must deploy the infrastructure before starting the lab. 
