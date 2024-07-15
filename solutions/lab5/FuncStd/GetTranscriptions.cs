@@ -1,8 +1,7 @@
-using System.Net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace FuncStd
 {
@@ -16,8 +15,8 @@ namespace FuncStd
         }
 
         [Function(nameof(GetTranscriptions))]
-        public HttpResponseData Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
+        public IActionResult Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req,
             [CosmosDBInput(
                 databaseName: "%COSMOS_DB_DATABASE_NAME%",
                 containerName: "%COSMOS_DB_CONTAINER_ID%",
@@ -31,14 +30,7 @@ namespace FuncStd
             // Simulate unexpected bahaviors
             UnexpectedBehaviors.Simulate();
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/json");
-
-            string jsonData = JsonSerializer.Serialize(transcriptions);
-
-            response.WriteString(jsonData);
-
-            return response;
+            return  new JsonResult(transcriptions);
         }
     }
 }

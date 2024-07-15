@@ -1536,7 +1536,7 @@ dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --versio
 
 Redeploy the `func-std` Function App to add this new endpoint manually or using your GitHub Actions workflow.
 
-If the deployment succeed you should see the new function in the Azure Function App:
+If the deployment succeed you should see the new `GetTranscriptions` function in the Azure Function App:
 
 ![New endpoint](assets/monitoring-new-endpoint.png)
 
@@ -1599,6 +1599,8 @@ As the test starts, you will see a `Load test results` dashboard with various me
 
 ![Average response time](assets/monitoring-average-time-when-succeeded.png)
 
+As you can see the response time decrease as the number of requests increase, to arrive to approximately 150ms at the end of the test.
+
 </details>
 
 You know have a way to monitor the performance of your Azure Function and identify potential issues before they impact your users.
@@ -1613,21 +1615,72 @@ Those environment variables are already set in the Azure Function App settings (
 
 Let's start by playing with the `ERROR_RATE` environment variable to simulate errors. Go to your Azure Function instance (`func-std-<your-instance-name>`), inside **Settings** > **Environment variables** > **App Settings** and set the `ERROR_RATE` to `50` to simulate 50% of errors.
 
-![Set Error Rate](assets/azure-function-app-error-rate.png) TODO
+![Set Error Rate](assets/azure-function-app-error-rate.png)
 
-Now, if you run the load test again you should see that 50% of the requests are failing.
+Wait for the end of the test.
 
-TODO: ADD image and explanations.
+<div class="task" data-title="Task">
+
+> - Use Application Insights to find more details about the error triggered by the load test
+
+</div>
+
+<details>
+
+<summary>📚 Toggle solution</summary>
+
+1. Go to your Azure Function App starting with `func-std`
+1. Locate the **Application Insights** tab inside **Settings** and on the right click on **View Application Insights data**.
+1. You should see a spike of errors on the `Failed requests` panel:
+
+![Failed requests](assets/monitoring-spike-of-requests.png)
+
+Then, click on the `Failures` tab on the left and click on the top response code (`500`) on the right panel. Select the suggested `GetTranscriptions` operation on the right panel
+
+![Failure overview](assets/monitoring-app-insights-failure-overview.png)
+
+You should see the details of the errors including any other service which was involved on the operation.
+Select the exception to access its call stack and check the `message` on the right panel and click on `[show more]` to get more details
+
+![Failure details](assets/monitoring-app-insights-detail.png)
+
+You should see a reference to `UnexpectedBehaviors.Simulate()`, in the `UnexpectedBehaviors.cs` file:
+
+![Failure stack](assets/monitoring-app-insights-exception-detail.png)
+
+Based on those metrics you can identify the root cause of the error and fix it.
+
+</details>
 
 ## Simulate latency
 
-Now let's reset the `ERROR_RATE` environment variable to `0` to disable the errors and simulate latency. Set the `LATENCY_IN_SECONDS` to `3` to simulate a latency of 3 seconds.
+Now let's go back to the **App Settings** of your `func-std` instance and reset the `ERROR_RATE` environment variable to `0` to disable the errors and simulate latency. Set the `LATENCY_IN_SECONDS` to `3` to simulate a latency of 3 seconds.
 
-If you run the load test again you should see that the average response time is now increasing. 
+Then run the load test again and wait for the end of the test.
 
-TODO: ADD image and explanations around the performance tab.
+<div class="task" data-title="Task">
 
-Reset the `LATENCY_IN_SECONDS` environment variable to `0` to disable the latency.
+> - Use Application Insights to find more details about the latency issue that you are simulating.
+
+</div>
+
+<details>
+
+<summary>📚 Toggle solution</summary>
+
+1. Go to your Azure Function App starting with `func-std`
+1. Locate the **Application Insights** tab inside **Settings** and on the right click on **View Application Insights data**.
+1. You should see an increase in response time on the `Server response time` panel:
+
+![Increase time](assets/monitoring-response-time-increase.png)
+
+1. Use the `Performance` blade or click on the response time chart
+1. You should see the duration taken by each operation
+1. Zoom into a range where the latency was injected, you should see the `GetTransactions` operation be unnaturally slow (+3 seconds) and you should see a red arrow on the right of the operation together with the percentage of increase in latency. That is the endpoint to investigate.
+
+![Latency details](assets/monitoring-get-transcriptions-performances.png)
+
+</details>
 
 [azure-load-testing-setup]:  https://learn.microsoft.com/en-us/azure/load-testing/how-to-create-load-test-function-app
 
