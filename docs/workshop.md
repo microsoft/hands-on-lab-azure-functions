@@ -204,7 +204,15 @@ az provider register --namespace 'Microsoft.LoadTestService'
 In the Lab 7 we will be using Azure OpenAI to analyse transcriptions.
 Please make sure that you can deploy Azure OpenAI on your subscription if you want to do this lab.
 
-TODO: find a reference/doc pointing to the model access form
+If you don't have access to Azure OpenAI in your subscription, you will have an error similar to this one:
+
+<div class="warning" data-title="warning">
+  
+> The subscription does not have QuotaId/Feature required by SKU 'S0' from kind 'OpenAI' or contains blocked QuotaId/Feature.
+
+</div>
+
+You will have to follow a form to request access to Azure OpenAI for your subscription and wait for the approval. The documentation and the link to the form request is available in this [FAQ][azure-openai-faq].
 
 ### Deploy the infrastructure
 
@@ -240,14 +248,15 @@ The deployment should take around 5 minutes to complete.
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [az-func-core-tools]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=v4%2Clinux%2Ccsharp%2Cportal%2Cbash#install-the-azure-functions-core-tools
 [az-func-languages]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions#languages
-[az-portal]: https://portal.azure.com
-[vs-code]: https://code.visualstudio.com/
 [azure-function-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions
+[azure-openai-faq]: https://learn.microsoft.com/en-us/azure/ai-services/openai/faq#how-do-i-get-access-to-azure-openai--
+[az-portal]: https://portal.azure.com
 [docker-desktop]: https://www.docker.com/products/docker-desktop/
-[repo-fork]: https://github.com/microsoft/hands-on-lab-azure-functions/fork
-[git-client]: https://git-scm.com/downloads
-[github-account]: https://github.com/join
 [download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
+[github-account]: https://github.com/join
+[git-client]: https://git-scm.com/downloads
+[repo-fork]: https://github.com/microsoft/hands-on-lab-azure-functions/fork
+[vs-code]: https://code.visualstudio.com/
 
 ---
 
@@ -1829,6 +1838,8 @@ At the end of this lab you should have an Azure Function exposed as an API in Az
 ---
 
 # Lab 7 : Use Azure Functions for Azure Open AI
+
+In this lab you will use Azure Functions to call the Azure Open AI service to analyse the transcription of the audio file and add some information to the Cosmos DB entry.
 
 TODO: Add an Azure Functions connected to Cosmos DB and Azure Open AI to analyse and add informations into the new entry.
 

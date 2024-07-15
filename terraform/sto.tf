@@ -1,10 +1,11 @@
 resource "azurerm_storage_account" "this" {
-  name                     = format("st%s", local.resource_suffix_lowercase)
-  resource_group_name      = azurerm_resource_group.this.name
-  location                 = azurerm_resource_group.this.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = local.tags
+  name                            = format("st%s", local.resource_suffix_lowercase)
+  resource_group_name             = azurerm_resource_group.this.name
+  location                        = azurerm_resource_group.this.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = false
+  tags                            = local.tags
 }
 
 resource "azurerm_storage_container" "this" {
@@ -14,19 +15,22 @@ resource "azurerm_storage_container" "this" {
 }
 
 resource "azurerm_storage_account" "func_std" {
-  name                     = format("stfstd%s", local.resource_suffix_lowercase)
-  resource_group_name      = azurerm_resource_group.this.name
-  location                 = azurerm_resource_group.this.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = local.tags
+  name                            = format("stfstd%s", local.resource_suffix_lowercase)
+  resource_group_name             = azurerm_resource_group.this.name
+  location                        = azurerm_resource_group.this.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = false
+  tags                            = local.tags
+
 }
 
 resource "azurerm_storage_account" "func_drbl" {
-  name                     = format("stfdrbl%s", local.resource_suffix_lowercase)
-  resource_group_name      = azurerm_resource_group.this.name
-  location                 = azurerm_resource_group.this.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = local.tags
+  name                            = format("stfdrbl%s", local.resource_suffix_lowercase)
+  resource_group_name             = azurerm_resource_group.this.name
+  location                        = azurerm_resource_group.this.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = false
+  tags                            = local.tags
 }
