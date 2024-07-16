@@ -126,10 +126,14 @@ namespace FuncDurable
         }
 
         [Function(nameof(EnrichTranscription))]
-        public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
+        public static AudioTranscription EnrichTranscription(
+            [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
+            [TextCompletionInput("Summarize {Result}")] TextCompletionResponse response
+        )
         {
             ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
-            logger.LogInformation($"Enriching transcription {audioFile.Id}");      
+            logger.LogInformation($"Enriching transcription {audioTranscription.Id}");
+            audioTranscription.Completion = response.Content;
             return audioTranscription;
         }
 

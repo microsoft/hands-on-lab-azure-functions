@@ -28,5 +28,8 @@ namespace FuncDurable
 
         [JsonPropertyName("status")]
         public string Status { get; set; }
+
+        [JsonPropertyName("completion")]
+        public string? Completion { get; set; }
     }
 }
