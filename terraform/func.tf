@@ -59,6 +59,8 @@ resource "azurerm_linux_function_app" "durable" {
     COSMOS_DB_DATABASE_NAME               = local.cosmos_db_database_name
     COSMOS_DB_CONTAINER_ID                = local.cosmos_db_container_name
     COSMOS_DB_CONNECTION_STRING           = azurerm_cosmosdb_account.this.primary_sql_connection_string
+    AZURE_OPENAI_ENDPOINT                 = azurerm_cognitive_account.open_ai.endpoint
+    CHAT_MODEL_DEPLOYMENT_NAME            = azurerm_cognitive_deployment.gpt_35_turbo.name
   }
 
   site_config {

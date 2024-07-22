@@ -1,4 +1,5 @@
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
@@ -115,7 +116,7 @@ namespace FuncDurable
             return status;
         }
 
-        
+
         [Function(nameof(GetTranscription))]
         public static async Task<string?> GetTranscription([ActivityTrigger] AudioFile audioFile, FunctionContext executionContext)
         {
@@ -128,7 +129,7 @@ namespace FuncDurable
         [Function(nameof(EnrichTranscription))]
         public static AudioTranscription EnrichTranscription(
             [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
-            [TextCompletionInput("Summarize {Result}")] TextCompletionResponse response
+            [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
         )
         {
             ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));

@@ -1033,8 +1033,6 @@ namespace FuncDurable
             HttpResponseMessage httpResponse = await httpClient.GetAsync(jobUrl);
             var serializedJob = await httpResponse.Content.ReadAsStringAsync();
 
-
-
             var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -1130,7 +1128,12 @@ public static async Task RunOrchestrator(
 
             if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
 
-            // Step4: Save transcription
+            // Step4: Enrich the transcription
+            string enrichedTranscription = await context.CallActivityAsync<string>(nameof(EnrichTranscription), audioTranscription);
+
+            if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+
+            // Step5: Save transcription
 
             break;
         }
@@ -1163,6 +1166,14 @@ public static async Task<string> CheckTranscriptionStatus([ActivityTrigger] Audi
 public static async Task<string?> GetTranscription([ActivityTrigger] AudioFile audioFile, FunctionContext executionContext)
 {
     // TODO: Call the Speech To Text service to get the transcription
+}
+
+[Function(nameof(EnrichTranscription))]
+public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
+{
+    ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
+    logger.LogInformation($"Enriching transcription {audioFile.Id}");      
+    return audioTranscription;
 }
 ```
 
@@ -1354,7 +1365,7 @@ Those configuration are already set in the Azure Function App settings (`func-dr
 Now you just need to call the `SaveTranscription` function in the orchestration part of the `AudioTranscriptionOrchestration.cs` file:
 
 ```csharp
-// Step4: Save transcription
+// Step5: Save transcription
 await context.CallActivityAsync(nameof(SaveTranscription), audioTranscription);
 
 if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audioFile.Id}"); }
@@ -1484,6 +1495,7 @@ namespace FuncStd
         public string path { get; set; }
         public string result { get; set; }
         public string status { get; set; }
+        public string? completion { get; set; }
         public int _ts { get; set; }
     }
 }
@@ -1841,7 +1853,113 @@ At the end of this lab you should have an Azure Function exposed as an API in Az
 
 In this lab you will use Azure Functions to call the Azure Open AI service to analyse the transcription of the audio file and add some information to the Cosmos DB entry.
 
-TODO: Add an Azure Functions connected to Cosmos DB and Azure Open AI to analyse and add informations into the new entry.
+You will go back to the Azure Durable Function you did in the previous lab and add a connection to Azure Open AI to be able summarize the transcription you saved.
+
+## Setup for Azure Open AI 
+
+### Add the .NET package
+
+Inside your `FuncDurable` let's add the following version of `Microsoft.Azure.Functions.Worker.Extensions.OpenAI`:
+
+```bash
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 0.16.0-alpha
+```
+
+### Add environment variables
+
+To be able to connect the Azure Function to the Azure Open AI service, you will need to set the `AZURE_OPENAI_ENDPOINT` and the `CHAT_MODEL_DEPLOYMENT_NAME` environment variable in your `local.settings.json` locally:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "STORAGE_ACCOUNT_CONNECTION_STRING": "<your-storage-account-connection-string>",
+    "STORAGE_ACCOUNT_CONTAINER": "audios",
+    "SPEECH_TO_TEXT_ENDPOINT": "<your-speech-to-text-endpoint>",
+    "SPEECH_TO_TEXT_API_KEY": "<your-speech-to-text-api-key>",
+    "COSMOS_DB_CONNECTION_STRING": "<your-cosmos-db-connection-string>",
+    "COSMOS_DB_DATABASE_NAME": "HolDb",
+    "COSMOS_DB_CONTAINER_ID": "audios_transcripts",
+    "AZURE_OPENAI_ENDPOINT": "<your-azure-open-ai-endpoint>",
+    "CHAT_MODEL_DEPLOYMENT_NAME": "gpt-35-turbo"
+  }
+}
+```
+
+To retrieve the `AZURE_OPENAI_ENDPOINT` you can go to the Azure Open AI service and find it in the **Keys and Endpoint** section.
+
+### Add the role to the Azure Function App
+
+The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service.
+
+Assign the role of `Cognitive Services OpenAI User` to your Azure Function app identity by goind to your Azure Open AI service and in the **Access control (IAM)** section click on the **+ Add** then **Add role assignment** button and select the `Cognitive Services OpenAI User` role.
+
+Select **Managed Identity** and select the Azure Function App that start with `func-drbl-` and click on the **Select** button.
+
+Finally click on the **Review + assign** button.
+
+## Enrich the transcription with Azure Open AI
+
+<div class="task" data-title="Tasks">
+
+> - Update the Activity function `EnrichTranscription` inside the `AudioTranscriptionOrchestration.cs` to call Azure OpenAI via `TextCompletionInput`
+> - Use the result to update the `Completion` field of the transcription.
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+First, you need to add the `TextCompletionInput` binding to the `EnrichTranscription` method:
+
+```csharp
+[Function(nameof(EnrichTranscription))]
+public static AudioTranscription EnrichTranscription(
+    [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
+    [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+)
+```
+
+Make sure to add the following `using` to be able to use the `TextCompletionInput` attribute:
+
+```csharp
+using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
+```
+
+This will managed for you the authentication to the Azure Open AI service and send the transcription to the service to get a summary of the transcription.
+
+Then you just have to consume the `Content` property of the response object and update the `Completion` field of the `AudioTranscription` object:
+
+```csharp
+audioTranscription.Completion = response.Content;
+```
+
+And that's it, you have now enriched the transcription of the audio file with the Azure Open AI service!
+
+So, to summarize, the function will look like this:
+
+```csharp
+[Function(nameof(EnrichTranscription))]
+public static AudioTranscription EnrichTranscription(
+    [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
+    [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+)
+{
+    ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
+    logger.LogInformation($"Enriching transcription {audioTranscription.Id}");
+    audioTranscription.Completion = response.Content;
+    return audioTranscription;
+}
+```
+
+</details>
+
+## Deployment and testing
+
+Deploy the Azure Durable Function using the same method as before in the Azure Function App starting with `func-drbl-<your-instance-suffix-name>`.
+
 
 ## Lab 7 : Summary
 
