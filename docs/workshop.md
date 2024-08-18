@@ -240,7 +240,7 @@ Finally apply the deployment:
 
 ```bash
 # Apply the deployment directly
-terraform apply -out plan.out
+terraform apply plan.out
 ```
 
 The deployment should take around 5 minutes to complete.

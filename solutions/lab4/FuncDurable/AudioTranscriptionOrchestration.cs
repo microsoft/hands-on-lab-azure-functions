@@ -70,7 +70,7 @@ namespace FuncDurable
                     };
 
                     // Step4: Enrich the transcription
-                    string enrichedTranscription = await context.CallActivityAsync<string>(nameof(EnrichTranscription), audioTranscription);
+                    AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
 
                     if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
 
@@ -129,7 +129,7 @@ namespace FuncDurable
         public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
         {
             ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
-            logger.LogInformation($"Enriching transcription {audioFile.Id}");      
+            logger.LogInformation($"Enriching transcription {audioTranscription.Id}");      
             return audioTranscription;
         }
 

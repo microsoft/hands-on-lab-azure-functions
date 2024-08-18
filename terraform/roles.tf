@@ -28,3 +28,9 @@ resource "azurerm_cosmosdb_sql_role_assignment" "cosmos_db_contributor_standard_
   principal_id        = azurerm_linux_function_app.standard.identity[0].principal_id
   scope               = azurerm_cosmosdb_account.this.id
 }
+
+resource "azurerm_role_assignment" "azure_openai_user_durable_function" {
+  scope                = azurerm_cognitive_account.open_ai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = azurerm_linux_function_app.durable.identity[0].principal_id
+}
