@@ -47,7 +47,7 @@ namespace FuncDurable
             var jobUri = await context.CallActivityAsync<string>(nameof(StartTranscription), audioFile);
             audioFile.JobUri = jobUri;
 
-            DateTime endTime = context.CurrentUtcDateTime.AddMinutes(2);
+            DateTime endTime = context.CurrentUtcDateTime.AddMinutes(5);
 
             while (context.CurrentUtcDateTime < endTime)
             {
@@ -71,7 +71,7 @@ namespace FuncDurable
                     };
 
                     // Step4: Enrich the transcription
-                    string enrichedTranscription = await context.CallActivityAsync<string>(nameof(EnrichTranscription), audioTranscription);
+                    AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
 
                     if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
 
