@@ -1,0 +1,97 @@
+resource "azapi_resource" "func_std" {
+  type                      = "Microsoft.Web/sites@2023-12-01"
+  schema_validation_enabled = false
+  location                  = azurerm_resource_group.this.location
+  name                      = format("func-std-%s", local.resource_suffix_kebabcase)
+  parent_id                 = azurerm_resource_group.this.id
+  body = jsonencode({
+    kind = "functionapp,linux",
+    identity = {
+      type : "SystemAssigned"
+    }
+    properties = {
+      serverFarmId = azapi_resource.server_farm.id,
+      functionAppConfig = {
+        deployment = {
+          storage = {
+            type  = "blobContainer",
+            value = "${azurerm_storage_account.func_std.primary_blob_endpoint}${local.function_deployment_package_container}",
+            authentication = {
+              type = "SystemAssignedIdentity"
+            }
+          }
+        },
+        scaleAndConcurrency = {
+          maximumInstanceCount = 100,
+          instanceMemoryMB     = 2048
+        },
+        runtime = {
+          name    = "dotnet-isolated",
+          version = "8.0"
+        }
+      },
+      siteConfig = {
+        appSettings = [
+          {
+            name  = "AzureWebJobsStorage__accountName",
+            value = azurerm_storage_account.func_std.name
+          },
+          #{
+          #  name = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+          #  value = "Authorization=AAD"
+          #},
+          #{
+          #  name = "APPLICATIONINSIGHTS_CONNECTION_STRING",
+          #  value = azurerm_application_insights.this.connection_string
+          #},
+          {
+            name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
+            value = azurerm_application_insights.this.connection_string
+          },
+          {
+            "name" : "STORAGE_ACCOUNT_CONTAINER",
+            "value" : local.storage_account_container_name
+          },
+          {
+            "name" : "STORAGE_ACCOUNT_CONNECTION_STRING",
+            "value" : azurerm_storage_account.this.primary_connection_string
+          },
+          {
+            name  = "COSMOS_DB_DATABASE_NAME",
+            value = local.cosmos_db_database_name
+          },
+          {
+            name  = "COSMOS_DB_CONTAINER_ID",
+            value = local.cosmos_db_container_name
+          },
+          {
+            name  = "COSMOS_DB_CONNECTION_STRING",
+            value = azurerm_cosmosdb_account.this.primary_sql_connection_string
+          },
+          {
+            name  = "ERROR_RATE",
+            value = "0"
+          },
+          {
+            name  = "LATENCY_IN_SECONDS",
+            value = "0"
+          },
+          {
+            name  = "TranscriptionsDatabase__accountEndpoint",
+            value = azurerm_cosmosdb_account.this.endpoint
+          },
+          {
+            name  = "AudioUploadStorage__serviceUri",
+            value = "https://${azurerm_storage_account.this.name}.blob.core.windows.net"
+          }
+        ]
+      }
+    }
+  })
+  depends_on = [azapi_resource.server_farm, azurerm_application_insights.this, azurerm_storage_account.func_std]
+}
+
+data "azurerm_linux_function_app" "func_std_wrapper" {
+  name                = azapi_resource.func_std.name
+  resource_group_name = azurerm_resource_group.this.name
+}

@@ -10,6 +10,8 @@ locals {
   cosmos_db_database_name  = "HolDb"
   cosmos_db_container_name = "audios_transcripts"
 
+  function_deployment_package_container = "deploymentpackage"
+
   tags = merge(
     var.tags,
     tomap(
