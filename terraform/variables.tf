@@ -37,9 +37,3 @@ variable "user_id" {
   type        = string
   default     = ""
 }
-
-variable "create_managed_identity" {
-  description = "The managed identity to be used to deploy the Azure Function App"
-  type        = bool
-  default     = true
-}

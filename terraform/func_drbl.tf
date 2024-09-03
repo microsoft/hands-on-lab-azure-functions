@@ -2,8 +2,9 @@ resource "azapi_resource" "func_drbl" {
   type                      = "Microsoft.Web/sites@2023-12-01"
   schema_validation_enabled = false
   location                  = azurerm_resource_group.this.location
-  name                      = format("func-drbl-%s", local.resource_suffix_kebabcase)
+  name                      = local.func_drbl_name
   parent_id                 = azurerm_resource_group.this.id
+  tags                      = local.tags
   body = jsonencode({
     kind = "functionapp,linux",
     identity = {
@@ -83,19 +84,18 @@ resource "azapi_resource" "func_drbl" {
           {
             name  = "AZURE_OPENAI_ENDPOINT",
             value = azurerm_cognitive_account.open_ai.endpoint
-          },
-          {
-            name  = "CHAT_MODEL_DEPLOYMENT_NAME",
-            value = azurerm_cognitive_deployment.gpt_35_turbo.name
           }
+          # {
+          #   name  = "CHAT_MODEL_DEPLOYMENT_NAME",
+          #   value = azurerm_cognitive_deployment.gpt_35_turbo.name
+          # }
         ]
       }
     }
   })
-  depends_on = [azapi_resource.server_farm, azurerm_application_insights.this, azurerm_storage_account.func_drbl]
-}
-
-data "azurerm_linux_function_app" "func_drbl_wrapper" {
-  name                = azapi_resource.func_drbl.name
-  resource_group_name = azurerm_resource_group.this.name
+  depends_on = [
+    azapi_resource.server_farm,
+    azurerm_application_insights.this,
+    azurerm_storage_account.func_drbl
+  ]
 }

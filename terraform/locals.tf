@@ -12,6 +12,9 @@ locals {
 
   function_deployment_package_container = "deploymentpackage"
 
+  func_drbl_name = format("func-drbl-%s", local.resource_suffix_kebabcase)
+  func_std_name  = format("func-std-%s", local.resource_suffix_kebabcase)
+
   tags = merge(
     var.tags,
     tomap(

@@ -12,17 +12,17 @@ resource "azurerm_cognitive_account" "open_ai" {
   }
 }
 
-resource "azurerm_cognitive_deployment" "gpt_35_turbo" {
-  name                 = "gpt-35-turbo"
-  cognitive_account_id = azurerm_cognitive_account.open_ai.id
-  model {
-    format  = "OpenAI"
-    name    = "gpt-35-turbo"
-    version = "0613"
-  }
+# resource "azurerm_cognitive_deployment" "gpt_35_turbo" {
+#   name                 = "gpt-35-turbo"
+#   cognitive_account_id = azurerm_cognitive_account.open_ai.id
+#   model {
+#     format  = "OpenAI"
+#     name    = "gpt-35-turbo"
+#     version = "1106"
+#   }
 
-  scale {
-    type     = "Standard"
-    capacity = 10
-  }
-}
+#   sku {
+#     name     = "GlobalStandard"
+#     capacity = 10
+#   }
+# }

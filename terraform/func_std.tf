@@ -2,8 +2,9 @@ resource "azapi_resource" "func_std" {
   type                      = "Microsoft.Web/sites@2023-12-01"
   schema_validation_enabled = false
   location                  = azurerm_resource_group.this.location
-  name                      = format("func-std-%s", local.resource_suffix_kebabcase)
+  name                      = local.func_std_name
   parent_id                 = azurerm_resource_group.this.id
+  tags                      = local.tags
   body = jsonencode({
     kind = "functionapp,linux",
     identity = {
@@ -49,12 +50,12 @@ resource "azapi_resource" "func_std" {
             value = azurerm_application_insights.this.connection_string
           },
           {
-            "name" : "STORAGE_ACCOUNT_CONTAINER",
-            "value" : local.storage_account_container_name
+            name  = "STORAGE_ACCOUNT_CONTAINER",
+            value = local.storage_account_container_name
           },
           {
-            "name" : "STORAGE_ACCOUNT_CONNECTION_STRING",
-            "value" : azurerm_storage_account.this.primary_connection_string
+            name  = "STORAGE_ACCOUNT_CONNECTION_STRING",
+            value = azurerm_storage_account.this.primary_connection_string
           },
           {
             name  = "COSMOS_DB_DATABASE_NAME",
@@ -88,10 +89,9 @@ resource "azapi_resource" "func_std" {
       }
     }
   })
-  depends_on = [azapi_resource.server_farm, azurerm_application_insights.this, azurerm_storage_account.func_std]
-}
-
-data "azurerm_linux_function_app" "func_std_wrapper" {
-  name                = azapi_resource.func_std.name
-  resource_group_name = azurerm_resource_group.this.name
+  depends_on = [
+    azapi_resource.server_farm,
+    azurerm_application_insights.this,
+    azurerm_storage_account.func_std
+  ]
 }
