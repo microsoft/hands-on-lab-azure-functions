@@ -34,28 +34,24 @@ resource "azapi_resource" "func_std" {
       siteConfig = {
         appSettings = [
           {
+            name  = "AzureWebJobsStorage",
+            value = azurerm_storage_account.func_std.primary_connection_string
+          },
+          {
             name  = "AzureWebJobsStorage__accountName",
             value = azurerm_storage_account.func_std.name
           },
-          #{
-          #  name = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
-          #  value = "Authorization=AAD"
-          #},
-          #{
-          #  name = "APPLICATIONINSIGHTS_CONNECTION_STRING",
-          #  value = azurerm_application_insights.this.connection_string
-          #},
           {
-            name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value = azurerm_application_insights.this.connection_string
+            name  = "AudioUploadStorage__serviceUri",
+            value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
+          },
+          {
+            name  = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+            value = "Authorization=AAD"
           },
           {
             name  = "STORAGE_ACCOUNT_CONTAINER",
             value = local.storage_account_container_name
-          },
-          {
-            name  = "STORAGE_ACCOUNT_CONNECTION_STRING",
-            value = azurerm_storage_account.this.primary_connection_string
           },
           {
             name  = "COSMOS_DB_DATABASE_NAME",
@@ -66,8 +62,8 @@ resource "azapi_resource" "func_std" {
             value = local.cosmos_db_container_name
           },
           {
-            name  = "COSMOS_DB_CONNECTION_STRING",
-            value = azurerm_cosmosdb_account.this.primary_sql_connection_string
+            name  = "COSMOS_DB__accountEndpoint",
+            value = azurerm_cosmosdb_account.this.endpoint
           },
           {
             name  = "ERROR_RATE",
@@ -76,14 +72,6 @@ resource "azapi_resource" "func_std" {
           {
             name  = "LATENCY_IN_SECONDS",
             value = "0"
-          },
-          {
-            name  = "TranscriptionsDatabase__accountEndpoint",
-            value = azurerm_cosmosdb_account.this.endpoint
-          },
-          {
-            name  = "AudioUploadStorage__serviceUri",
-            value = "https://${azurerm_storage_account.this.name}.blob.core.windows.net"
           }
         ]
       }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
+using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
 
 namespace FuncDurable
 {
@@ -97,12 +98,12 @@ namespace FuncDurable
                     };
 
                     // Step4: Enrich the transcription
-                    // AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
+                    AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
 
-                    // if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+                    if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
 
                     // Step5: Save transcription
-                    await context.CallActivityAsync(nameof(SaveTranscription), audioTranscription); // enrichedTranscription);
+                    await context.CallActivityAsync(nameof(SaveTranscription), enrichedTranscription);
 
                     if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audioFile.Id}"); }
 
@@ -152,17 +153,17 @@ namespace FuncDurable
             return transcription;
         }
 
-        // [Function(nameof(EnrichTranscription))]
-        // public static AudioTranscription EnrichTranscription(
-        //     [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
-        //     [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
-        // )
-        // {
-        //     ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
-        //     logger.LogInformation($"Enriching transcription {audioTranscription.Id}");
-        //     audioTranscription.Completion = response.Content;
-        //     return audioTranscription;
-        // }
+        [Function(nameof(EnrichTranscription))]
+        public static AudioTranscription EnrichTranscription(
+            [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
+            [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+        )
+        {
+            ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
+            logger.LogInformation($"Enriching transcription {audioTranscription.Id}");
+            audioTranscription.Completion = response.Content;
+            return audioTranscription;
+        }
 
         [Function(nameof(SaveTranscription))]
         [CosmosDBOutput("%COSMOS_DB_DATABASE_NAME%",

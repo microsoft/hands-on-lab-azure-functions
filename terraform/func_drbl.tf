@@ -85,10 +85,10 @@ resource "azapi_resource" "func_drbl" {
             name  = "AZURE_OPENAI_ENDPOINT",
             value = azurerm_cognitive_account.open_ai.endpoint
           },
-          # {
-          #   name  = "CHAT_MODEL_DEPLOYMENT_NAME",
-          #   value = azurerm_cognitive_deployment.gpt_35_turbo.name
-          # }
+          {
+            name  = "CHAT_MODEL_DEPLOYMENT_NAME",
+            value = azurerm_cognitive_deployment.gpt_35_turbo.name
+          }
         ]
       }
     }

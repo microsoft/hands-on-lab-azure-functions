@@ -20,7 +20,7 @@ namespace FuncStd
             [CosmosDBInput(
                 databaseName: "%COSMOS_DB_DATABASE_NAME%",
                 containerName: "%COSMOS_DB_CONTAINER_ID%",
-                Connection = "TranscriptionsDatabase",
+                Connection = "COSMOS_DB",
                 SqlQuery = "SELECT * FROM c ORDER BY c._ts DESC OFFSET 0 LIMIT 50")
             ] IEnumerable<Transcription> transcriptions
         )
