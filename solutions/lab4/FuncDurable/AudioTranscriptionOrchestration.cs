@@ -2,6 +2,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 
@@ -11,20 +12,46 @@ namespace FuncDurable
     {
         [Function(nameof(AudioBlobUploadStart))]
         public static async Task AudioBlobUploadStart(
-                [BlobTrigger("%STORAGE_ACCOUNT_CONTAINER%/{name}", Connection = "STORAGE_ACCOUNT_CONNECTION_STRING")] BlobClient blobClient,
+                [BlobTrigger("%STORAGE_ACCOUNT_CONTAINER%/{name}", Source = BlobTriggerSource.EventGrid, Connection = "STORAGE_ACCOUNT_EVENT_GRID")] Stream stream, string name,
                 [DurableClient] DurableTaskClient client,
                 FunctionContext executionContext)
         {
             ILogger logger = executionContext.GetLogger(nameof(AudioBlobUploadStart));
 
-            var blobSasBuilder = new BlobSasBuilder(BlobSasPermissions.Read, DateTimeOffset.Now.AddMinutes(10));
-            var audioBlobSasUri = blobClient.GenerateSasUri(blobSasBuilder);
+            logger.LogInformation($"Processing audio file {name}");
+
+            var storageAccountNameUri = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL")
+
+            // Create a new Blob service client with Azure AD credentials.
+            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountNameUri), new DefaultAzureCredential());
+            var blobContainerClient = blobServiceClient.GetBlobContainerClient(Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_CONTAINER"));
+            var blobClient = blobContainerClient.GetBlobClient(name);
+
+            var userDelegationKey = blobServiceClient.GetUserDelegationKey(DateTimeOffset.UtcNow,
+                                                                            DateTimeOffset.UtcNow.AddMinutes(10));
+            var sasBuilder = new BlobSasBuilder()
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b", // b for blob, c for container
+                StartsOn = DateTimeOffset.UtcNow,
+                ExpiresOn = DateTimeOffset.UtcNow.AddHours(2),
+            };
+
+            // Only read permission is necessary
+            sasBuilder.SetPermissions(BlobSasPermissions.Read); 
+            
+            // Add the SAS token to the container URI.
+            var blobUriBuilder = new BlobUriBuilder(blobClient.Uri)
+            {
+                Sas = sasBuilder.ToSasQueryParameters(userDelegationKey, blobServiceClient.AccountName)
+            };
 
             var audioFile = new AudioFile
             {
                 Id = Guid.NewGuid().ToString(),
                 Path = blobClient.Uri.ToString(),
-                UrlWithSasToken = audioBlobSasUri.AbsoluteUri
+                UrlWithSasToken = blobUriBuilder.ToUri().ToString()
             };
 
             logger.LogInformation($"Processing audio file {audioFile.Id}");
@@ -36,7 +63,7 @@ namespace FuncDurable
 
         [Function(nameof(AudioTranscriptionOrchestration))]
         public static async Task RunOrchestrator(
-            [OrchestrationTrigger] TaskOrchestrationContext context, 
+            [OrchestrationTrigger] TaskOrchestrationContext context,
             AudioFile audioFile)
         {
             ILogger logger = context.CreateReplaySafeLogger(nameof(AudioTranscriptionOrchestration));
@@ -46,7 +73,7 @@ namespace FuncDurable
             var jobUri = await context.CallActivityAsync<string>(nameof(StartTranscription), audioFile);
             audioFile.JobUri = jobUri;
 
-            DateTime endTime = context.CurrentUtcDateTime.AddMinutes(2);
+            DateTime endTime = context.CurrentUtcDateTime.AddMinutes(5);
 
             while (context.CurrentUtcDateTime < endTime)
             {
@@ -70,12 +97,12 @@ namespace FuncDurable
                     };
 
                     // Step4: Enrich the transcription
-                    AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
+                    // AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
 
-                    if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+                    // if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
 
                     // Step5: Save transcription
-                    await context.CallActivityAsync(nameof(SaveTranscription), enrichedTranscription);
+                    await context.CallActivityAsync(nameof(SaveTranscription), audioTranscription); // enrichedTranscription);
 
                     if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audioFile.Id}"); }
 
@@ -115,7 +142,7 @@ namespace FuncDurable
             return status;
         }
 
-        
+
         [Function(nameof(GetTranscription))]
         public static async Task<string?> GetTranscription([ActivityTrigger] AudioFile audioFile, FunctionContext executionContext)
         {
@@ -125,13 +152,17 @@ namespace FuncDurable
             return transcription;
         }
 
-        [Function(nameof(EnrichTranscription))]
-        public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
-        {
-            ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
-            logger.LogInformation($"Enriching transcription {audioTranscription.Id}");      
-            return audioTranscription;
-        }
+        // [Function(nameof(EnrichTranscription))]
+        // public static AudioTranscription EnrichTranscription(
+        //     [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
+        //     [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+        // )
+        // {
+        //     ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
+        //     logger.LogInformation($"Enriching transcription {audioTranscription.Id}");
+        //     audioTranscription.Completion = response.Content;
+        //     return audioTranscription;
+        // }
 
         [Function(nameof(SaveTranscription))]
         [CosmosDBOutput("%COSMOS_DB_DATABASE_NAME%",
@@ -142,7 +173,7 @@ namespace FuncDurable
         {
             ILogger logger = executionContext.GetLogger(nameof(SaveTranscription));
             logger.LogInformation("Saving the audio transcription...");
-         
+
             return audioTranscription;
         }
     }

@@ -42,6 +42,10 @@ resource "azapi_resource" "func_drbl" {
             value = azurerm_storage_account.func_drbl.name
           },
           {
+            name  = "STORAGE_ACCOUNT_URL",
+            value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
+          },
+          {
             name  = "STORAGE_ACCOUNT_CONTAINER",
             value = local.storage_account_container_name
           },
