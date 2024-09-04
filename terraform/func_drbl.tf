@@ -34,32 +34,28 @@ resource "azapi_resource" "func_drbl" {
       siteConfig = {
         appSettings = [
           {
-            name  = "AzureWebJobsStorage__accountName",
-            value = azurerm_storage_account.func_drbl.name
-          },
-          {
             name  = "AzureWebJobsStorage",
             value = azurerm_storage_account.func_drbl.primary_connection_string
           },
-          #{
-          #  name = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
-          #  value = "Authorization=AAD"
-          #},
-          #{
-          #  name = "APPLICATIONINSIGHTS_CONNECTION_STRING",
-          #  value = azurerm_application_insights.this.connection_string
-          #},
           {
-            name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value = azurerm_application_insights.this.connection_string
+            name  = "AzureWebJobsStorage__accountName",
+            value = azurerm_storage_account.func_drbl.name
           },
           {
             name  = "STORAGE_ACCOUNT_CONTAINER",
             value = local.storage_account_container_name
           },
           {
-            name  = "STORAGE_ACCOUNT_CONNECTION_STRING",
-            value = azurerm_storage_account.this.primary_connection_string
+            name  = "STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri",
+            value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
+          },
+          {
+            name  = "STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri",
+            value = format("https://%s.queue.core.windows.net", azurerm_storage_account.this.name)
+          },
+          {
+            name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
+            value = azurerm_application_insights.this.connection_string
           },
           {
             name  = "SPEECH_TO_TEXT_ENDPOINT",
@@ -84,7 +80,7 @@ resource "azapi_resource" "func_drbl" {
           {
             name  = "AZURE_OPENAI_ENDPOINT",
             value = azurerm_cognitive_account.open_ai.endpoint
-          }
+          },
           # {
           #   name  = "CHAT_MODEL_DEPLOYMENT_NAME",
           #   value = azurerm_cognitive_deployment.gpt_35_turbo.name

@@ -16,11 +16,3 @@ resource "azapi_resource" "server_farm" {
   })
   tags = local.tags
 }
-
-# resource "azurerm_service_plan" "example" {
-#   name                = "example"
-#   resource_group_name = azurerm_resource_group.this.name
-#   location            = azurerm_resource_group.this.location
-#   os_type             = "Linux"
-#   sku_name            = "FC1"
-# }

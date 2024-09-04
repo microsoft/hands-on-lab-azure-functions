@@ -1,10 +1,3 @@
-resource "azurerm_role_assignment" "this" {
-  count                = var.user_id != "" ? 1 : 0
-  scope                = azurerm_resource_group.this.id
-  role_definition_name = "Contributor"
-  principal_id         = var.user_id
-}
-
 # Role to deploy the Azure Function with a managed identity using GitHub Actions.
 resource "azurerm_role_assignment" "func_std_website_contributor" {
   scope                = data.azurerm_linux_function_app.func_std.id
@@ -29,31 +22,31 @@ resource "azurerm_role_assignment" "func_drbl_azure_openai_user" {
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_std_audio_storage_roleassignment" {
+resource "azurerm_role_assignment" "func_std_audio_storage_data_owner" {
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = data.azurerm_linux_function_app.func_std.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_drbl_audio_storage_blob_roleassignment" {
+resource "azurerm_role_assignment" "func_drbl_audio_storage_blob_data_owner" {
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_drbl_audio_storage_queue_roleassignment" {
+resource "azurerm_role_assignment" "func_drbl_audio_storage_queue_data_contributor" {
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_std_deployment_storage_roleassignment" {
+resource "azurerm_role_assignment" "func_std_deployment_storage_blob_data_owner" {
   scope                = azurerm_storage_account.func_std.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = data.azurerm_linux_function_app.func_std.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_drbl_deployment_storage_roleassignment" {
+resource "azurerm_role_assignment" "func_drbl_deployment_storage_blob_data_owner" {
   scope                = azurerm_storage_account.func_drbl.id
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
@@ -65,13 +58,13 @@ resource "azurerm_role_assignment" "func_drbl_storage_contributor" {
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_drbl_storage_queue_contributor" {
+resource "azurerm_role_assignment" "func_drbl_storage_queue_data_contributor" {
   scope                = azurerm_storage_account.func_drbl.id
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "func_drbl_storage_table_contributor" {
+resource "azurerm_role_assignment" "func_drbl_storage_table_data_contributor" {
   scope                = azurerm_storage_account.func_drbl.id
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
