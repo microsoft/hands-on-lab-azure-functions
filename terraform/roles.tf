@@ -5,14 +5,24 @@ resource "azurerm_role_assignment" "func_std_website_contributor" {
   principal_id         = azurerm_user_assigned_identity.func_std.principal_id
 }
 
-resource "random_uuid" "cosmos_db_contributor_uuid" {}
+resource "random_uuid" "func_std_cosmos_db_contributor_uuid" {}
+resource "random_uuid" "func_drbl_cosmos_db_contributor_uuid" {}
 
 resource "azurerm_cosmosdb_sql_role_assignment" "func_std_cosmos_db_contributor" {
-  name                = random_uuid.cosmos_db_contributor_uuid.result
+  name                = random_uuid.func_std_cosmos_db_contributor_uuid.result
   resource_group_name = azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
-  role_definition_id  = data.azurerm_cosmosdb_sql_role_definition.func_std_cosmos_db_contributor.id
+  role_definition_id  = data.azurerm_cosmosdb_sql_role_definition.cosmos_db_data_contributor.id
   principal_id        = data.azurerm_linux_function_app.func_std.identity[0].principal_id
+  scope               = azurerm_cosmosdb_account.this.id
+}
+
+resource "azurerm_cosmosdb_sql_role_assignment" "func_drbl_cosmos_db_contributor" {
+  name                = random_uuid.func_drbl_cosmos_db_contributor_uuid.result
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  role_definition_id  = data.azurerm_cosmosdb_sql_role_definition.cosmos_db_data_contributor.id
+  principal_id        = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
   scope               = azurerm_cosmosdb_account.this.id
 }
 

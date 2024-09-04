@@ -78,8 +78,8 @@ resource "azapi_resource" "func_drbl" {
             value = local.cosmos_db_container_name
           },
           {
-            name  = "COSMOS_DB_CONNECTION_STRING",
-            value = azurerm_cosmosdb_account.this.primary_sql_connection_string
+            name  = "COSMOS_DB__accountEndpoint",
+            value = azurerm_cosmosdb_account.this.endpoint
           },
           {
             name  = "AZURE_OPENAI_ENDPOINT",

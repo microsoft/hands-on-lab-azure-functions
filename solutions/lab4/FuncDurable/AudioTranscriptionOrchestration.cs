@@ -20,10 +20,10 @@ namespace FuncDurable
 
             logger.LogInformation($"Processing audio file {name}");
 
-            var storageAccountNameUri = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL");
+            var storageAccountNameUrl = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL") ?? throw new ArgumentNullException("STORAGE_ACCOUNT_URL");
 
             // Create a new Blob service client with Azure AD credentials.
-            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountNameUri), new DefaultAzureCredential());
+            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountNameUrl), new DefaultAzureCredential());
             var blobContainerClient = blobServiceClient.GetBlobContainerClient(Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_CONTAINER"));
             var blobClient = blobContainerClient.GetBlobClient(name);
 
@@ -167,7 +167,7 @@ namespace FuncDurable
         [Function(nameof(SaveTranscription))]
         [CosmosDBOutput("%COSMOS_DB_DATABASE_NAME%",
                          "%COSMOS_DB_CONTAINER_ID%",
-                         Connection = "COSMOS_DB_CONNECTION_STRING",
+                         Connection = "COSMOS_DB",
                          CreateIfNotExists = true)]
         public static AudioTranscription SaveTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
         {
