@@ -20,7 +20,7 @@ namespace FuncDurable
 
             logger.LogInformation($"Processing audio file {name}");
 
-            var storageAccountNameUri = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL")
+            var storageAccountNameUri = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL");
 
             // Create a new Blob service client with Azure AD credentials.
             var blobServiceClient = new BlobServiceClient(new Uri(storageAccountNameUri), new DefaultAzureCredential());
