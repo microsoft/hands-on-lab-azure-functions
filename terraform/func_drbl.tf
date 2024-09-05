@@ -34,10 +34,6 @@ resource "azapi_resource" "func_drbl" {
       siteConfig = {
         appSettings = [
           {
-            name  = "AzureWebJobsStorage",
-            value = azurerm_storage_account.func_drbl.primary_connection_string
-          },
-          {
             name  = "AzureWebJobsStorage__accountName",
             value = azurerm_storage_account.func_drbl.name
           },
