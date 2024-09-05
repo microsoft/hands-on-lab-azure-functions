@@ -15,13 +15,13 @@ contacts: # Required. Must match the number of authors
   - "@justrebl"
   - "@damienaicheh"
 duration_minutes: 180
-tags: azure, azure functions, azure durable functions, cosmos db, github actions, csu, codespace, devcontainer
+tags: azure, azure functions, azure durable functions, flex, apim, monitoring, cosmos db, github actions, csu, codespace, devcontainer
 navigation_levels: 3
 ---
 
 # Product Hands-on Lab - Azure Functions
 
-Welcome to this Azure Functions Workshop. You'll be experimenting with Azure Functions service in multiple labs to achieve a real world scenario. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
+Welcome to this Azure Functions Workshop. You'll be experimenting with Azure Functions service in multiple labs to achieve a real world scenario. We will use the Azure Functions flex consumption plan for all of these labs which contains the latest features of Azure Functions. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
 
 During this workshop you will have the instructions to complete each steps. It is recommended to search for the answers in provided resources and links before looking at the solutions placed under the '📚 Toggle solution' panel.
 
@@ -38,7 +38,7 @@ During this workshop you will have the instructions to complete each steps. It i
 
 ## Scenario
 
-The goal of the full lab is to upload an audio file to Azure and save the transcripts back inside a Cosmos DB database. The scenario is as follows:
+The goal of the full lab is to upload an audio file to Azure and save the transcripts back inside a Cosmos DB database and enrich these transcriptions with a summary using Azure Open AI. The scenario is as follows:
 
 ![Hand's On Lab Architecture](assets/architecture-overview.svg)
 
@@ -64,14 +64,12 @@ With everything ready let's start the lab 🚀
 
 Before starting this lab, be sure to set your Azure environment :
 
-- An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code. If not possible the **Contributor** role will be enough to deploy the resources but without the ability to create a Managed Identity.
-- A dedicated resource group for this lab to ease the cleanup at the end.
-- Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`.
-
+- An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code and managed identities.
+- The ability to register the Azure providers on your Azure Subscription if not done yet (you will also have the command lines to run in the Azure Login section later in this lab): `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
+- You will also need a GitHub Account (Free, Team or Enterprise)
 
 To retrieve the lab content :
 
-- A Github account (Free, Team or Enterprise)
 - Create a [fork][repo-fork] of the repository from the **main** branch to help you keep track of your changes
 
 3 development options are available:
@@ -81,7 +79,7 @@ To retrieve the lab content :
 
 <div class="tip" data-title="Tips">
 
-> - To focus on the main purpose of the lab, we encourage the usage of devcontainers/codespace as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
+> - To focus on the main purpose of the lab, we encourage the usage of codespace or devcontainer as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
 > 
 > - You could decide to run everything without relying on a devcontainer : To do so, make sure you install all the prerequisites detailed below.
 
@@ -172,11 +170,12 @@ Let's begin!
 ```bash
 # Login to Azure : 
 # --tenant : Optional | In case your Azure account has access to multiple tenants
+# The tenant id can be easily find by searching for "Tenant properties" in the search bar of the Azure Portal.
 
 # Option 1 : Local Environment or Dev Container
-az login --tenant <yourtenantid or domain.com>
+az login --tenant <your tenant id or domain.com>
 # Option 2 : Github Codespace : you might need to specify --use-device-code parameter to ease the az cli authentication process
-az login --use-device-code --tenant <yourtenantid or domain.com>
+az login --use-device-code --tenant <your tenant id or domain.com>
 
 # Display your account details
 az account show
@@ -195,24 +194,13 @@ az provider register --namespace 'Microsoft.ApiManagement'
 az provider register --namespace 'Microsoft.Web'
 # Azure Load Test Service
 az provider register --namespace 'Microsoft.LoadTestService'
+# Azure Key Vault
+az provider register --namespace 'Microsoft.KeyVault'
+# Azure Event Grid
+az provider register --namespace 'Microsoft.EventGrid'
 ```
 
 </details>
-
-### Access to Azure OpenAI
-
-In the Lab 7 we will be using Azure OpenAI to analyse transcriptions.
-Please make sure that you can deploy Azure OpenAI on your subscription if you want to do this lab.
-
-If you don't have access to Azure OpenAI in your subscription, you will have an error similar to this one:
-
-<div class="warning" data-title="warning">
-  
-> The subscription does not have QuotaId/Feature required by SKU 'S0' from kind 'OpenAI' or contains blocked QuotaId/Feature.
-
-</div>
-
-You will have to follow a form to request access to Azure OpenAI for your subscription and wait for the approval. The documentation and the link to the form request is available in this [FAQ][azure-openai-faq].
 
 ### Deploy the infrastructure
 
@@ -224,32 +212,30 @@ First, you need to initialize the terraform infrastructure by running the follow
 cd terraform && terraform init
 ```
 
+Since Azurerm Terraform provider version 4 you need to specify the subscription id to be able to deploy, so you must retreive it and expose it using the environmnet variable `ARM_SUBSCRIPTION_ID` like this:
+
+```bash
+export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+```
+ 
 Then run the following command to deploy the infrastructure if you have the **Owner** role on the subscription:
 
 ```bash
 terraform plan -out plan.out
 ```
 
-If you have the **Contributor** role, you will need to set the `create_managed_identity` variable to `false` by running the following command:
-
-```bash
-terraform plan -var create_managed_identity=false -out plan.out
-```
-
 Finally apply the deployment:
 
 ```bash
-# Apply the deployment directly
 terraform apply plan.out
 ```
 
-The deployment should take around 5 minutes to complete.
+The deployment should take around 5 minutes to complete, you can continue reading the next part in parallel.
 
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [az-func-core-tools]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=v4%2Clinux%2Ccsharp%2Cportal%2Cbash#install-the-azure-functions-core-tools
 [az-func-languages]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions#languages
 [azure-function-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions
-[azure-openai-faq]: https://learn.microsoft.com/en-us/azure/ai-services/openai/faq#how-do-i-get-access-to-azure-openai--
 [az-portal]: https://portal.azure.com
 [docker-desktop]: https://www.docker.com/products/docker-desktop/
 [download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
@@ -268,7 +254,9 @@ For this first lab, you will focus on the following scope :
 
 The Azure Storage Account is used to store data objects, including blobs, file shares, queues, tables, and disks. You will use it to store the audios files inside an `audios` container.
 
-To check that everything was created as expected, open the [Azure Portal][az-portal] and you should retrieve your `audios` container:
+To check that everything was created as expected, open the [Azure Portal][az-portal] and select the storage account which is **not** starting with `stfstd` or `stfdrbl` those two are for the Azure Functions.
+
+In the third one, you should retrieve your `audios` container:
 
 ![Storage account access keys](assets/storage-account-show-container.png)
 
@@ -284,7 +272,7 @@ Azure Functions are event-driven : They must be triggered by an event coming fro
 
 In the same `Function App` you will be able to add multiple `functions`, each with its own set of triggers and bindings. These triggers and bindings can benefit from existing `expressions`, which are parameter conventions easing the overall development experience. For example, you can use an expression to use the execution timestamp, or generate a unique `GUID` name for a file uploaded to a storage account.
 
-Azure Functions run and benefit from the App Service platform, offering features like: deployment slots, continuous deployment, HTTPS support, hybrid connections and others. Apart from the `Consumption` (Serverless) model we're most interested in this Lab, Azure Functions can also be deployed a dedicated `App Service Plan`or in a hybrid model called `Premium Plan`.
+Azure Functions run and benefit from the App Service platform, offering features like: deployment slots, continuous deployment, HTTPS support, hybrid connections and others. Apart from the `Flex Consumption` (Serverless) model we're most interested in this Lab, Azure Functions can also be deployed a dedicated `Consumption`, `App Service Plan` or in a hybrid model called `Premium Plan`.
 
 ## Azure Functions : Let's practice
 
@@ -312,14 +300,14 @@ At this stage in our scenario, the goal is to upload an audio into the Storage A
 <details>
 <summary>📚 Toggle solution</summary>
 
-If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions/FuncStd`.
+If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions`.
 
 ### Preparation
 
 You will create a function using the [Azure Function Core Tools][azure-function-core-tools]:
 
 ```bash
-# Create a folder for your function app and navigate to it
+# At the root of your repository, create a folder for your function app and navigate to it
 mkdir FuncStd
 cd FuncStd
 
@@ -331,18 +319,14 @@ func init --worker-runtime dotnet-isolated --target-framework net8.0
 func new --name AudioUpload --template 'HTTP Trigger'
 
 # Add a new Nuget package dependency to the Blob storage SDK
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.3.0
-
-# Open the new projet inside VS Code
-code .
-
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.6.0
 ```
 
 If you open the Azure Function App resource started with `func-std` in the [Azure Portal][az-portal] and go to the `Environment variables` panel. You should see in App Settings the `STORAGE_ACCOUNT_CONTAINER` set to `audios` and the connection string of the storage account already pre-populated in the `STORAGE_ACCOUNT_CONNECTION_STRING` environment variable.
 
 ### .NET 8 implementation
 
-In this version of the implementation, you will be using the [.NET 8 Isolated](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-in-process-differences) runtime.
+In this version of the implementation, you will be using the [.NET 8 Isolated][in-process-vs-isolated] runtime.
 
 Now that you have a skeleton for our `AudioUpload` function in the `AudioUpload.cs` file, you will need to update it to meet the following goals:
 
@@ -350,17 +334,17 @@ Now that you have a skeleton for our `AudioUpload` function in the `AudioUpload.
 - It should store the file as a blob inside the blob Storage Account
 - It should respond to user with a status code 200
 
-To upload the file, you will rely on the blob output binding [`BlobOutput`](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cin-process&pivots=programming-language-csharp) of the Azure Function, which will take care of the logic of connecting to the Storage Account and uploading the function with minimal line of code in our side.
+To upload the file, you will rely on the blob output binding [`BlobOutput`][blob-output] of the Azure Function, which will take care of the logic of connecting to the Storage Account and uploading the function with minimal line of code in our side.
 
 To do this, let's start by adding a `AudioUploadOutput` class to the `AudioUpload.cs` file for simplicity but it can be done in a specific class.
 
 ```csharp
 public class AudioUploadOutput
 {
-    [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection="STORAGE_ACCOUNT_CONNECTION_STRING")]
+    [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection = "STORAGE_ACCOUNT_CONNECTION_STRING")]
     public byte[] Blob { get; set; }
 
-    public HttpResponseData HttpResponse { get; set; }
+    public required IActionResult HttpResponse { get; set; }
 }
 ```
 
@@ -368,7 +352,8 @@ This class will handle uploading the blob and returning the HTTP response:
 
 - The blob will be stored in the container identified by `STORAGE_ACCOUNT_CONTAINER` which is an environment variable.
 - The blob will be named `{rand-guid}.wav` which resolves to a UUID followed by `.wav`.
-- `STORAGE_ACCOUNT_CONNECTION_STRING` is the name of App setting which contains the connection string that you will use to connect to the blob storage account
+- `STORAGE_ACCOUNT_CONNECTION_STRING` is the name of App setting which contains the connection string that you will use to connect to the blob storage account.
+In a next lab you will discover the usage of managed identities to avoid using connection strings.
 
 Next, you will need to update the class `AudioUpload` to add the logic for reading the file from the request, and then use `AudioUploadOutput` to perform the blob upload and returning the response.
 
@@ -377,30 +362,26 @@ Update the code of the `Run` method in the `AudioUpload` class as follows:
 ```csharp
 [Function(nameof(AudioUpload))]
 public AudioUploadOutput Run(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req
 )
 {
-    _logger.LogInformation("C# HTTP trigger function processed a request.");
+    _logger.LogInformation("Processing a new audio file upload request");
 
-    // Read the file contents from the request
-    // and store it in the `audioFileData` buffer
-    var audioFileData = default(byte[]);
+    // Get the first file in the form
+    byte[]? audioFileData = null;
+    var file = req.Form.Files[0];
+
     using (var memstream = new MemoryStream())
     {
-        req.Body.CopyTo(memstream);
+        file.OpenReadStream().CopyTo(memstream);
         audioFileData = memstream.ToArray();
     }
 
-    // Prepare the response to return to the user
-    var response = req.CreateResponse(HttpStatusCode.OK);
-    response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
-    response.WriteString("Uploaded!");
-
-    // Use AudioUploadOutput to return the response and store the blob
+    // Store the file as a blob and return a success response
     return new AudioUploadOutput()
     {
         Blob = audioFileData,
-        HttpResponse = response
+        HttpResponse = new OkObjectResult("Uploaded!")
     };
 }
 ```
@@ -425,6 +406,8 @@ Add the following environment variables to your `local.settings.json` file:
 }
 ```
 
+To retreive the connection string of your Storage Account, open it in the Azure Portal and go to the `Access keys` tab in the Azure Portal.
+
 To test your function locally, you will need to start the extension `Azurite` to emulate the Azure Storage Account. Just run `Ctrl` + `Shift` + `P` and search for `Azurite: Start`:
 
 ![Start Azurite](assets/function-azurite.png)
@@ -435,10 +418,21 @@ Then you can use the Azure Function Core Tools to run the function locally:
 func start
 ```
 
+if you have an error such as:
+
+> Can't determine Project to build. Expected 1 .csproj or .fsproj but found 2
+
+Just remove the bin and obj folder and run the command again, the issue is currently being corrected.
+
+```bash
+rm -rf bin/ && rm -rf obj/ && func start
+```
+
 <div class="tip" data-title="Tips">
 
-> - If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
+> - If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) or infinite loop, then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
 > - Please refer to this [port forwarding guide on Github Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace#using-command-line-tools-and-rest-clients-to-access-ports) for more details.
+> - If you are using DevContainers look at the forwared address in the port tab of VS Code.
 
 </div>
 
@@ -451,6 +445,7 @@ func start
 - Make sure you're signed in to your Azure account
 - Open the Function App panel
 - Right-click on your function app and select `Deploy to Function App...`
+- Select the Function starting with `func-std-`
 
 ![Deploy to Function App](assets/function-app-deploy.png)
 
@@ -463,20 +458,31 @@ Deploy your function using the VS Code extension or by command line:
 func azure functionapp publish func-std-<your-instance-suffix-name>
 ```
 
+### Test with Postman
+
 Let's give a try using Postman. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`. 
 The Azure Function url is protected by a code to ensure a basic security layer. 
 
 ![Azure Function url credentials](assets/func-url-credentials.png)
 
-Use this url into your Postman to upload the audio file. Create a POST request and in the row where you set the key to `audios` make sure to select the file option in the hidden dropdown menu to be able to select a file in the value field:
+Use this url into your Postman to upload the audio file. 
+
+Here are the files that you can use:
+
+- [Microsoft AI](assets/MicrosoftAI.wav)
+- [Azure Functions](assets/AzureFunctions.wav)
+
+Create a POST request and in the row where you set the key to `audio` for instance then, make sure to select the `file` option in the hidden dropdown menu to be able to select a file in the value field:
 
 ![Postman](assets/func-postman.png)
+
+If you go back to the Storage Account, you should see inside the `audios` container the files that you uploaded with your `AudioUpload` Azure Function!
 
 </details>
 
 ### Save your changes
 
-Don't forget to commit your changes to your forked repository to keep track of your progress. You will need the code for the next labs.
+Don't forget to commit your changes to your forked repository to keep track of your progress. **You will need the code for the next labs.**
 
 You can commit directly on the `main` branch for this workshop:
 
@@ -495,9 +501,9 @@ You are now ready for the next labs!
 
 By now you should have a solution that :
 
-- Send new audio files added to a blob storage using a first Azure Function, inside an `audios` container.
+Send new audio files added to a blob storage using a first Azure Function, inside an `audios` container.
 
-The first Azure Function API created in the Lab offers a first security layer to the solution as it requires a key to be called, as well as makes sure all the files are stores with a uniquely generated name (GUID).
+The first Azure Function API created in the Lab offers a first security layer to the solution as it requires a key to be called, as well as makes sure all the files are stores with a uniquely generated name (GUID). We will go further in the next labs.
 
 [az-portal]: https://portal.azure.com
 [azure-function]: https://learn.microsoft.com/en-us/cli/azure/functionapp?view=azure-cli-latest
@@ -506,157 +512,17 @@ The first Azure Function API created in the Lab offers a first security layer to
 [azure-function-http]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?pivots=programming-language-python&tabs=python-v2%2Cin-process%2Cfunctionsv2
 [azure-function-blob-output]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?pivots=programming-language-python&tabs=python-v2%2Cin-process
 [azure-function-bindings-expression]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-expressions-patterns
+[in-process-vs-isolated]: https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-in-process-differences
+[blob-output]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cin-process&pivots=programming-language-csharp
+[azure-managed-identities]: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
 
 ---
 
-# Lab 2 : Deploy your Azure Functions using GitHub Actions
+# Lab 2 : Secure your Azure Functions with Managed Identity
 
-In this lab you will use the `FuncStd` Function App created in the previous lab.
+In the previous labs, you have created an Azure Function App and deployed it. 
 
-The goal is to automate the deployment of this Function App usin  GitHub Actions. This will allow you to deploy all new changes to Azure when you push your code to the repository.
-
-## Create a GitHub Actions workflow
-
-<div class="task" data-title="Tasks">
-
-> - Inside the Azure Function App on Azure Portal which start by `func-std`, go to the `Deployment Center` and try to setup a GitHub Actions workflow to deploy the Azure Functions from the `FuncStd` folder.
-
-</div>
-
-<div class="tip" data-title="Tips">
-
-> - [Azure Functions Deployment Center][azure-function-deployment-center]<br>
-
-</div>
-
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-### Configure the deployment source
-
-Go to the Azure Function App resource with the name starting with `func-std` in the [Azure Portal][az-portal] and go to the `Deployment Center`:
-
-![Select continuous deployment](assets/function-select-continuous-deployment.png)
-
-In the dropdown menu, select `GitHub`. You will have to sign in to your GitHub account and select the repository and branch you want to deploy from, in your case it should be the forked repository of this workshop and the `main` branch:
-
-![Select repository](assets/function-create-continuous-deployment-1.png)
-
-Then if you have deployed the infrastructure using the provided Terraform configuration with the **Owner** role on your subscription select the `User-assigned Identity` option to manage the authentication between GitHub and Azure. 
-
-You should see an identity stating with `id-func-std-` in the resource group of the Function App. Select this identity in the dropdown menu:
-
-![Select authentification type](assets/function-create-continuous-deployment-2.png)
-
-If you have deployed the infrastructure with the **Contributor** role, select the `Basic authentication` option. This will use the Publish Profile to authenticate the deployment.
-
-Azure will generate for you a new workflow based on the configuration of your Function App and push it directly to your GitHub repository inside the `.github/workflows` folder. You have also access to a preview of the workflow at the end of the process by clicking on `Preview file`.
-
-Finally, click on the **Save** button and let Azure processed the creation of the workflow.
-
-### Update the GitHub Actions workflow
-
-Now if you go to your GitHub repository, you should see a new folder `.github` with a `workflows` folder containing the `YAML` file. The file which should start with: `main_func-std-`.
-
-Open it and update the `AZURE_FUNCTIONAPP_PACKAGE_PATH` value with the folder where your Function App is located. In this case, if you followed the previous lab entirely, it should be `FuncStd`.
-
-Your workflow file should look like this one:
-
-```yaml
-name: Build and deploy dotnet core project to Azure Function App
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'FuncStd' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write #This is required for requesting the JWT
-
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
-
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AF92B6192C8247AEB1477BD6F8234F8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5D6C9612393042E18C71D6C1E815AD8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9D0D44BA36384A2886F3894D5296BBD }}
-
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        id: fa
-        with:
-          app-name: 'func-std-lab-ea-hol-ms-548d-01'
-          slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-```
-
-Now you can push this file to your repository and the GitHub Actions workflow will be triggered to deploy the Azure Function App.
-
-Let's understand how this GitHub Action workflow works:
-
-- The `on` section defines the events that will trigger the workflow. In this case, the workflow will be triggered on every push to the `main` branch but also manually using the `workflow_dispatch` event.
-
-- The `env` section defines the environment variables that will be used in the workflow. The `AZURE_FUNCTIONAPP_PACKAGE_PATH` variable is set to the path of the Azure Function App project and the `DOTNET_VERSION` variable is set to the version of the .NET SDK to use.
-
-- Then you have a job called `build-and-deploy` that runs on an `ubuntu-latest` runner. This job has several steps:
-  - The first step checks out the code from the repository.
-  - The second step sets up the .NET environment using the `setup-dotnet` action.
-  - The third step resolves the project dependencies using the `dotnet build` command.
-  - The fourth step logs in to Azure using the `azure/login` action with the user assigned identity to connect to Azure. All the credentials are stored in GitHub secrets. If you have deployed the infrastructure with the **Contributor** role, the `azure/login` will not be used and the `functions-action` will use the Publish Profile to authenticate the deployment.
-  - The final step runs the Azure `functions-action` to deploy the Azure Function App.
-
-To see the deployment status, go to the `Actions` tab in your GitHub repository:
-
-![GitHub Actions Overview](assets/function-github-actions-overview.png)
-
-If you open it you will see the detail of the job with all the steps executed:
-
-![Github Actions Detail](assets/function-job-detail.png)
-
-As you can see all steps executed successfully and you can look at the logs to see the details of each step.
-
-You can now try to add some changes to your Azure Function and push them to your repository to see the GitHub Actions workflow in action.
-
-</details>
-
-## Lab 2 : Summary
-
-By now you should have a solution that deploy the Azure Function App using GitHub Actions.
-
-[azure-function-deployment-center]: https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment?tabs=github%2Cgithubactions#configure-the-deployment-source
-[az-portal]: https://portal.azure.com
-
----
-
-# Lab 3 : Secure your Azure Functions with Managed Identity
-
-In the previous labs, you have created an Azure Function App and deployed it using GitHub Actions. 
-
-In the first lab, you have created an Azure Function to upload an audio file to a Storage Account, but you have used a connection string to access the Storage Account. This is not the best practice as the connection string is a sensitive information.
+You have created an Azure Function to upload an audio file to a Storage Account, but you have used a connection string to access the Storage Account. This is not the best practice as the connection string is a sensitive information.
 
 Using managed identities in Azure offers several key benefits:
 
@@ -692,7 +558,7 @@ In your `AudioUpload.cs` file, you will need to update the `BlobOutput` attribut
 
 This name will be then concatenated with the `__serviceUri` environment variable to create the full URI of the Storage Account where you have uploaded your files, so the managed identity can access it.
 
-Redeploy your Azure Function App using GitHub Actions or manually.
+Redeploy your Azure Function App.
 
 ### Assign the role to the Managed Identity
 
@@ -722,7 +588,7 @@ Try to upload a new audio file using Postman to make sure that the Managed Ident
 
 </details>
 
-## Lab 3 : Summary
+## Lab 2 : Summary
 
 In this lab you have secured the access to the Azure Storage Account using a Managed Identity. Now you don't need to worry about storing the connection string in your Azure Function App, the Managed Identity will take care of the authentication.
 
@@ -730,26 +596,29 @@ In this lab you have secured the access to the Azure Storage Account using a Man
 
 ---
 
-# Lab 4 : Process the audio file with an Azure Durable Function
+# Lab 3 : Process the audio file with an Azure Durable Function
  
-To process the audio file, extract the transcript and save it to Azure Cosmos DB, you will need to create a Durable Function. Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
+To process the audio file, extract the transcript, save it to Azure Cosmos DB and later ask for a summary with Azure Open AI, you will need to create a Durable Function. Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
 For this lab, you will focus on the following scope :
 
-![Hand's On Lab Architecture Lab 2](assets/architecture-lab2.svg)
+![Hand's On Lab Architecture Lab](assets/architecture-lab2.svg)
 
 ## Detect a file upload event 
 
-Now you have the audio file uploaded in the storage account, you will need to detect this event to trigger the next steps of the scenario.
+### Listen to the audio upload
+
+Now, you have the audio file uploaded in the storage account, you will need to detect this event to trigger the next steps of the scenario.
 
 <div class="task" data-title="Tasks">
 
-> - Create a new `Durable Function` with a `Blob Trigger` to detect the file upload event and start the processing of the audio file.
+> - Create a new `Durable Function` with a `Blob Trigger` to detect the file upload event based on Event Grid and start the processing of the audio file.
 >
 > - Use the `func` CLI tool and .NET 8 using the isolated mode to create this Durable Function.
 > - Use the `Audio.cs` file below to instanciate an `AudioFile` object when the Azure Function is triggered.
 > - Create an `AudioTranscriptionOrchestration.cs` file which will be used to create the orchestration of the entire Azure Function.
 > - Generate a uri with a SAS token to access the blob storage.
+> - Add an Event Grid subscription to detect the upload of audios in real time.
 
 </div>
 
@@ -758,6 +627,7 @@ Now you have the audio file uploaded in the storage account, you will need to de
 > - [Azure Functions][azure-function]<br>
 > - [Azure Functions Binding Expressions][azure-function-bindings-expression]<br>
 > - [Azure Function Blob Triggered][azure-function-blob-trigger]<br>
+> - [Azure Function Blob Trigger with Event Grid][blob-trigger-event-grid]<br>
 
 </div>
 
@@ -797,6 +667,9 @@ namespace FuncDurable
 
         [JsonPropertyName("status")]
         public string Status { get; set; }
+
+        [JsonPropertyName("completion")]
+        public string? Completion { get; set; }
     }
 }
 ```
@@ -816,13 +689,10 @@ cd FuncDurable
 func init --worker-runtime dotnetIsolated --target-framework net8.0
 
 # Add the Nuget package for Storage Account to use for Functions
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.3.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.6.0
 
 # Add the Nuget package to use Durable Functions
 dotnet add package Microsoft.Azure.Functions.Worker.Extensions.DurableTask --version 1.0.0
-
-# Open the new projet inside VS Code
-code .
 ```
 
 Add the `Audio.cs` file with the content provided above. Then create a new file called `AudioTranscriptionOrchestration.cs` to create the orchestration of the entire Azure Function.
@@ -834,6 +704,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 
@@ -843,20 +714,46 @@ namespace FuncDurable
     {
         [Function(nameof(AudioBlobUploadStart))]
         public static async Task AudioBlobUploadStart(
-                [BlobTrigger("%STORAGE_ACCOUNT_CONTAINER%/{name}", Connection = "STORAGE_ACCOUNT_CONNECTION_STRING")] BlobClient blobClient,
+                [BlobTrigger("%STORAGE_ACCOUNT_CONTAINER%/{name}", Source = BlobTriggerSource.EventGrid, Connection = "STORAGE_ACCOUNT_EVENT_GRID")] Stream stream, string name,
                 [DurableClient] DurableTaskClient client,
                 FunctionContext executionContext)
         {
             ILogger logger = executionContext.GetLogger(nameof(AudioBlobUploadStart));
 
-            var blobSasBuilder = new BlobSasBuilder(BlobSasPermissions.Read, DateTimeOffset.Now.AddMinutes(10));
-            var audioBlobSasUri = blobClient.GenerateSasUri(blobSasBuilder);
+            logger.LogInformation($"Processing audio file {name}");
+
+            var storageAccountNameUrl = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_URL") ?? throw new ArgumentNullException("STORAGE_ACCOUNT_URL");
+
+            // Create a new Blob service client with Azure AD credentials.
+            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountNameUrl), new DefaultAzureCredential());
+            var blobContainerClient = blobServiceClient.GetBlobContainerClient(Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_CONTAINER"));
+            var blobClient = blobContainerClient.GetBlobClient(name);
+
+            var userDelegationKey = blobServiceClient.GetUserDelegationKey(DateTimeOffset.UtcNow,
+                                                                            DateTimeOffset.UtcNow.AddMinutes(10));
+            var sasBuilder = new BlobSasBuilder()
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b", // b for blob, c for container
+                StartsOn = DateTimeOffset.UtcNow,
+                ExpiresOn = DateTimeOffset.UtcNow.AddHours(2),
+            };
+
+            // Only read permission is necessary
+            sasBuilder.SetPermissions(BlobSasPermissions.Read); 
+            
+            // Add the SAS token to the container URI.
+            var blobUriBuilder = new BlobUriBuilder(blobClient.Uri)
+            {
+                Sas = sasBuilder.ToSasQueryParameters(userDelegationKey, blobServiceClient.AccountName)
+            };
 
             var audioFile = new AudioFile
             {
                 Id = Guid.NewGuid().ToString(),
                 Path = blobClient.Uri.ToString(),
-                UrlWithSasToken = audioBlobSasUri.AbsoluteUri
+                UrlWithSasToken = blobUriBuilder.ToUri().ToString()
             };
 
             logger.LogInformation($"Processing audio file {audioFile.Id}");
@@ -866,31 +763,48 @@ namespace FuncDurable
 ```
 
 As you can see you are using the `BlobTrigger` attribute to detect the file upload event. This attribute will trigger the function when a new blob is uploaded to the `audios` container. 
-To be able to access the blob storage, you need to use the `BlobClient` object then we generate a SAS token to access the blob.
 
-To be able to connect the Azure Function to the Storage Account, you will need to set the `STORAGE_ACCOUNT_CONNECTION_STRING` and the `STORAGE_ACCOUNT_CONTAINER` environment variable in your `local.settings.json` locally:
+To detect when a new audio is uploaded in the Storage Account we use the Event Grid service by enabling it with the option: `BlobTriggerSource.EventGrid`.
 
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONNECTION_STRING": "<your-storage-account-connection-string>",
-    "STORAGE_ACCOUNT_CONTAINER": "audios"
-  }
-}
-```
+Then we generate a Sas token to access the blob.
 
-This configuration is already set in the Azure Function App settings (`func-drbl-<your-instance-name>`) when you deployed the infrastructure previously.
+Let's deploy your function using the VS Code extension or by command line to the function stating with `func-drbl`.
 
-Like you did in the previous lab, you can test your function locally by starting `Azurite` and using the Azure Function Core Tools:
+### Event Subscription
+
+Next step is to create an Event Grid Subscription to listen to the event of uploading in your `audios` container.
+
+Open the resource group and find the `Event Grid System Topic` resource already created for you. Select the **Event Subscriptions** tab and create a new Event Subscription.
+
+Give it a name and select only `Blob Created` in the `Filter to Event Types` drop down. In the `Endpoint type` section select **Web Hook**.
+
+Then to configure the webhook you need to follow this pattern:
 
 ```bash
-func start
+https://<FUNCTION_APP_NAME>.azurewebsites.net/runtime/webhooks/blobs?functionName=Host.Functions.<YOUR_FUNCTION_NAME>&code=<BLOB_EXTENSION_KEY>
 ```
 
-Deploy your function using the VS Code extension or by command line and try to upload a file to the storage account to see if the function is triggered correctly.
+- The `<FUNCTION_APP_NAME>` is the one starting with `func-drbl`
+- The `<YOUR_FUNCTION_NAME>` is `AudioBlobUploadStart` in your case
+- The `<BLOB_EXTENSION_KEY>`	is generated after you deploy your Azure Function code, it's in the **App keys** section of your Azure Durable Function (starting with `func-drbl`).
+
+![Create Event Subscription](assets/create-event-subscription.png)
+
+Finally, we just want to detect `.wav` files so we can enable this in the **Filters** tab.
+
+![Event filtering](assets/event-filtering.png)
+
+Finally you can click **Create**.
+
+Try to upload a file to the audios container and you should see:
+
+The Event Subscription starting:
+
+![Event Grid Topic](assets/event-grid-subscription-topic.png)
+
+And if you click on the `AudioBlobUploadStart` function and select the **Invocations** tab, you will see the Azure Durable Function starting base on this event:
+
+![Durable Function Audio detected](assets/durable-function-audio-detected.png)
 
 </details>
 
@@ -1407,6 +1321,7 @@ By now you should have a solution that :
 [cosmos-db-output-binding]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb-v2-output?tabs=python-v2%2Cisolated-process%2Cnodejs-v4%2Cextensionv4&pivots=programming-language-csharp
 [cognitive-service-api]: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-speech-to-text-short#regions-and-endpoints
 [cosmos-db]: https://learn.microsoft.com/en-us/azure/cosmos-db/scripts/cli/nosql/serverless
+[blob-trigger-event-grid]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-event-grid-blob-trigger?pivots=programming-language-csharp
 
 ---
 
@@ -1555,7 +1470,7 @@ Finally add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget pac
 dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
 ```
 
-Redeploy the `func-std` Function App to add this new endpoint manually or using your GitHub Actions workflow.
+Redeploy the `func-std` Function App to add this new endpoint.
 
 If the deployment succeed you should see the new `GetTranscriptions` function in the Azure Function App:
 
@@ -1981,3 +1896,147 @@ To do so, click on `delete resource group` in the Azure Portal to delete all the
 # Delete the resource group with all the resources
 az group delete --name <resource-group>
 ```
+
+<!-- 
+---
+
+# Lab 2 : Deploy your Azure Functions using GitHub Actions
+
+In this lab you will use the `FuncStd` Function App created in the previous lab.
+
+The goal is to automate the deployment of this Function App using  GitHub Actions. This will allow you to deploy all new changes to Azure when you push your code to the repository.
+
+## Create a GitHub Actions workflow
+
+<div class="task" data-title="Tasks">
+
+> - Inside the Azure Function which start by `func-std` on Azure Portal, go to the `Deployment Center` and try to setup a GitHub Actions workflow to deploy the Azure Functions from the `FuncStd` folder.
+
+</div>
+
+<div class="tip" data-title="Tips">
+
+> - [Azure Functions Deployment Center][azure-function-deployment-center]<br>
+
+</div>
+
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+### Configure the deployment source
+
+Go to the Azure Function App resource with the name starting with `func-std` in the [Azure Portal][az-portal] and go to the `Deployment Center`:
+
+![Select continuous deployment](assets/function-select-continuous-deployment.png)
+
+In the dropdown menu, select `GitHub`. You will have to sign in to your GitHub account and select the repository and branch you want to deploy from, in your case it should be the forked repository of this workshop and the `main` branch:
+
+![Select repository](assets/function-create-continuous-deployment-1.png)
+
+Then if you have deployed the infrastructure using the provided Terraform configuration with the **Owner** role on your subscription select the `User-assigned Identity` option to manage the authentication between GitHub and Azure. 
+
+You should see an identity stating with `id-func-std-` in the resource group of the Function App. Select this identity in the dropdown menu:
+
+![Select authentification type](assets/function-create-continuous-deployment-2.png)
+
+If you have deployed the infrastructure with the **Contributor** role, select the `Basic authentication` option. This will use the Publish Profile to authenticate the deployment.
+
+Azure will generate for you a new workflow based on the configuration of your Function App and push it directly to your GitHub repository inside the `.github/workflows` folder. You have also access to a preview of the workflow at the end of the process by clicking on `Preview file`.
+
+Finally, click on the **Save** button and let Azure processed the creation of the workflow.
+
+### Update the GitHub Actions workflow
+
+Now if you go to your GitHub repository, you should see a new folder `.github` with a `workflows` folder containing the `YAML` file. The file which should start with: `main_func-std-`.
+
+Open it and update the `AZURE_FUNCTIONAPP_PACKAGE_PATH` value with the folder where your Function App is located. In this case, if you followed the previous lab entirely, it should be `FuncStd`.
+
+Your workflow file should look like this one:
+
+```yaml
+name: Build and deploy dotnet core project to Azure Function App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'FuncStd' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write #This is required for requesting the JWT
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 'Resolve Project Dependencies Using Dotnet'
+        shell: bash
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+      
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AF92B6192C8247AEB1477BD6F8234F8 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5D6C9612393042E18C71D6C1E815AD8 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9D0D44BA36384A2886F3894D5296BBD }}
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: 'func-std-lab-ea-hol-ms-548d-01'
+          slot-name: 'Production'
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+```
+
+Now you can push this file to your repository and the GitHub Actions workflow will be triggered to deploy the Azure Function App.
+
+Let's understand how this GitHub Action workflow works:
+
+- The `on` section defines the events that will trigger the workflow. In this case, the workflow will be triggered on every push to the `main` branch but also manually using the `workflow_dispatch` event.
+
+- The `env` section defines the environment variables that will be used in the workflow. The `AZURE_FUNCTIONAPP_PACKAGE_PATH` variable is set to the path of the Azure Function App project and the `DOTNET_VERSION` variable is set to the version of the .NET SDK to use.
+
+- Then you have a job called `build-and-deploy` that runs on an `ubuntu-latest` runner. This job has several steps:
+  - The first step checks out the code from the repository.
+  - The second step sets up the .NET environment using the `setup-dotnet` action.
+  - The third step resolves the project dependencies using the `dotnet build` command.
+  - The fourth step logs in to Azure using the `azure/login` action with the user assigned identity to connect to Azure. All the credentials are stored in GitHub secrets. If you have deployed the infrastructure with the **Contributor** role, the `azure/login` will not be used and the `functions-action` will use the Publish Profile to authenticate the deployment.
+  - The final step runs the Azure `functions-action` to deploy the Azure Function App.
+
+To see the deployment status, go to the `Actions` tab in your GitHub repository:
+
+![GitHub Actions Overview](assets/function-github-actions-overview.png)
+
+If you open it you will see the detail of the job with all the steps executed:
+
+![Github Actions Detail](assets/function-job-detail.png)
+
+As you can see all steps executed successfully and you can look at the logs to see the details of each step.
+
+You can now try to add some changes to your Azure Function and push them to your repository to see the GitHub Actions workflow in action.
+
+</details>
+
+## Lab 2 : Summary
+
+By now you should have a solution that deploy the Azure Function App using GitHub Actions.
+
+[azure-function-deployment-center]: https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment?tabs=github%2Cgithubactions#configure-the-deployment-source
+[az-portal]: https://portal.azure.com -->

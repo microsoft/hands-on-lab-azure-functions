@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "..",
+		},
+		{
+			"path": "../src/solutions/FuncStd",
+			"name": "Az Function Standard (Solution)"
+		},
+		{
+			"path": "../src/solutions/FuncDurable",
+			"name": "Az Function Durable (Solution)"
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen",
+		"azurite.location": "/tmp",
+	}
+}
