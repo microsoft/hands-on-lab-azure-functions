@@ -79,3 +79,9 @@ resource "azurerm_role_assignment" "func_drbl_storage_table_data_contributor" {
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "func_drbl_key_vault_secrets_user" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets User" 
+  principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
+}

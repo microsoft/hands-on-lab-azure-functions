@@ -63,7 +63,7 @@ resource "azapi_resource" "func_drbl" {
           },
           {
             name  = "SPEECH_TO_TEXT_API_KEY",
-            value = azurerm_cognitive_account.speech_to_text.primary_access_key
+            value = format("@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)", azurerm_key_vault.this.name, azurerm_key_vault_secret.speech_to_text_api_key.name)
           },
           {
             name  = "COSMOS_DB_DATABASE_NAME",
@@ -92,6 +92,10 @@ resource "azapi_resource" "func_drbl" {
   depends_on = [
     azapi_resource.server_farm,
     azurerm_application_insights.this,
-    azurerm_storage_account.func_drbl
+    azurerm_storage_account.func_drbl,
+    azurerm_key_vault.this,
+    azurerm_cosmosdb_account.this,
+    azurerm_cognitive_account.speech_to_text,
+    azurerm_cognitive_account.open_ai
   ]
 }
