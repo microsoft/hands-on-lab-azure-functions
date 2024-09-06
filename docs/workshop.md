@@ -1040,14 +1040,13 @@ public static async Task RunOrchestrator(
             // Step3: TODO: Get transcription
             
 
-            if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+            // Step4: TODO: Enrich the transcription
 
-            // Step4: Enrich the transcription
-            string enrichedTranscription = await context.CallActivityAsync<string>(nameof(EnrichTranscription), audioTranscription);
+            if (!context.IsReplaying) { logger.LogInformation($"Enrich transcription of {audioFile.Id} to Cosmos DB"); }
 
-            if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+            // Step5: TODO: Save transcription
 
-            // Step5: Save transcription
+            if (!context.IsReplaying) { logger.LogInformation($"Save transcription, finishing processing of {audioFile.Id}"); }
 
             break;
         }
@@ -1086,7 +1085,7 @@ public static async Task<string?> GetTranscription([ActivityTrigger] AudioFile a
 public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
 {
     ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));
-    logger.LogInformation($"Enriching transcription {audioFile.Id}");      
+    logger.LogInformation($"Enriching transcription {audioTranscription.Id}");      
     return audioTranscription;
 }
 ```
@@ -1158,11 +1157,10 @@ var jobUri = await context.CallActivityAsync<string>(nameof(StartTranscription),
 audioFile.JobUri = jobUri;
 ```
 
-For the `Step2` you will need to call the `CheckTranscriptionStatus` function:
+For the `Step2` you will need to call the `CheckTranscriptionStatus` function to get the status of the transcription:
 
 ```csharp
 var status = await context.CallActivityAsync<string>(nameof(CheckTranscriptionStatus), audioFile);
-        if (!context.IsReplaying) { logger.LogInformation($"Status of the transcription of {audioFile.Id}: {status}"); }
 ```
 
 For the `Step3` you will need to call the `GetTranscription` function and create the `AudioTranscription` object to store the data in Cosmos DB in the next step:
@@ -1181,27 +1179,7 @@ var audioTranscription = new AudioTranscription
 };
 ```
 
-To be able to test this locally you should add the `SPEECH_TO_TEXT_ENDPOINT` and the `SPEECH_TO_TEXT_API_KEY` environment variables in your `local.settings.json` file:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONNECTION_STRING": "<your-storage-account-connection-string>",
-    "STORAGE_ACCOUNT_CONTAINER": "audios",
-    "SPEECH_TO_TEXT_ENDPOINT": "<your-speech-to-text-endpoint>",
-    "SPEECH_TO_TEXT_API_KEY": "<your-speech-to-text-api-key>"
-  }
-}
-```
-
-Those configuration are already set in the Azure Function App settings (`func-drbl-<your-instance-name>`) when you deployed the infrastructure previously.
-
-If you run the function locally and upload an audio file, you should see the different steps of the orchestration in the logs and the transcription of the audio file.
-
-If necessary the source code with the solutions can be found in this Github Repository, under `./solutions/lab4/FuncDrbl`.
+The  `SPEECH_TO_TEXT_ENDPOINT` and the `SPEECH_TO_TEXT_API_KEY` environment variables are already set on Azure for you, if you look at the environment variable of your function you will see that for security reason the `SPEECH_TO_TEXT_API_KEY` is refering a Key Vault where the key is.
 
 </details>
 
@@ -1217,6 +1195,7 @@ You now have a transcription of your audio file, next step is to store it in a N
 > - Use the `CosmosDBOutput` binding to store the data in the Cosmos DB.
 > - Store the `AudioTranscription` object in the Cosmos DB container called `audios_transcripts`.
 > - Call the activity from the orchestration part.
+> - Use manage identity to connect to Cosmos DB. 
 
 </div>
 
@@ -1242,37 +1221,20 @@ Then to store the transcription of the audio file in Cosmos DB, you will need to
 [Function(nameof(SaveTranscription))]
 [CosmosDBOutput("%COSMOS_DB_DATABASE_NAME%",
                     "%COSMOS_DB_CONTAINER_ID%",
-                    Connection = "COSMOS_DB_CONNECTION_STRING",
+                    Connection = "COSMOS_DB",
                     CreateIfNotExists = true)]
 public static AudioTranscription SaveTranscription([ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext)
 {
     ILogger logger = executionContext.GetLogger(nameof(SaveTranscription));
     logger.LogInformation("Saving the audio transcription...");
-    
+
     return audioTranscription;
 }
 ```
 
 As you can see, by just defining the binding, the Azure Function will take care of storing the data in the Cosmos DB container, so you just need to return the object you want to store, in this case, the `AudioTranscription` object.
 
-To be able to connect the Azure Function to the Cosmos DB, you will need to set the `COSMOS_DB_CONNECTION_STRING`, the `COSMOS_DB_DATABASE_NAME` and the `COSMOS_DB_CONTAINER_ID` environment variable in your `local.settings.json` locally:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONNECTION_STRING": "<your-storage-account-connection-string>",
-    "STORAGE_ACCOUNT_CONTAINER": "audios",
-    "SPEECH_TO_TEXT_ENDPOINT": "<your-speech-to-text-endpoint>",
-    "SPEECH_TO_TEXT_API_KEY": "<your-speech-to-text-api-key>",
-    "COSMOS_DB_CONNECTION_STRING": "<your-cosmos-db-connection-string>",
-    "COSMOS_DB_DATABASE_NAME": "HolDb",
-    "COSMOS_DB_CONTAINER_ID": "audios_transcripts"
-  }
-}
-```
+To be able to connect the Azure Function to the Cosmos DB, you have the `COSMOS_DB_DATABASE_NAME`, the `COSMOS_DB_CONTAINER_ID` and the `COSMOS_DB` environment variable. The `COSMOS_DB` will be the connection key that will be concat with `__accountEndpoint` to specify the Cosmos DB account endpoint so it will be able to connect using Managed identity. 
 
 Those configuration are already set in the Azure Function App settings (`func-drbl-<your-instance-name>`) when you deployed the infrastructure previously.
 
@@ -1282,20 +1244,16 @@ Now you just need to call the `SaveTranscription` function in the orchestration 
 // Step5: Save transcription
 await context.CallActivityAsync(nameof(SaveTranscription), audioTranscription);
 
-if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audioFile.Id}"); }
+if (!context.IsReplaying) { logger.LogInformation($"Save transcription, finishing processing of {audioFile.Id}"); }
 ```
-
-You can now test your function locally and upload an audio file to see if the transcription is stored in the Cosmos DB container and check the logs to see the different steps of the orchestration.
 
 </details>
 
 #### Deployment and testing
 
-Deploy the Azure Durable Function using the same method as before but with the new function name.
+You can now redeploy your function and upload an audio file to see if the transcription is stored in the Cosmos DB container and check the logs to see the different steps of the orchestration.
 
-```bash
-func-drbl-<your-instance-suffix-name>
-```
+Deploy the Azure Durable Function using the same method as before but with the new function starting with `func-drbl-<your-instance-suffix-name>`.
 
 If the deployment succeed you should see the new function in the Azure Function App:
 
@@ -1305,7 +1263,7 @@ You can now validate the entire workflow : delete and upload once again the audi
 
 ![Cosmos Db Explorer](assets/cosmos-db-explorer.png)
 
-## Lab 4 : Summary
+## Lab 3 : Summary
 
 By now you should have a solution that :
 
@@ -1325,7 +1283,7 @@ By now you should have a solution that :
 
 ---
 
-# Lab 5 : Monitor your Azure Functions
+# Lab 4 : Monitor your Azure Functions
 
 Let's now focus on monitoring the Azure Functions. Azure Application Insights provides a monitoring and logging solution that allows you to monitor the performance and health of your functions. You can use the Azure portal to monitor your functions, view logs, and troubleshoot issues.
 
@@ -1348,7 +1306,7 @@ Azure Load Testing integrates seamlessly with other Azure services. For instance
 
 ## Add a new endpoint to your Azure Function App
 
-Let's add a new endpoint to your Azure Function App to get the audio transcriptions and use Azure Load Testing to simulate the load on this endpoint.
+Let's add a new endpoint to your first Azure Function App to get the audio transcriptions and use Azure Load Testing to simulate the load on this endpoint.
 
 In the `FuncStd` add a new file called `GetTranscriptions.cs` with the following content:
 
@@ -1476,7 +1434,7 @@ If the deployment succeed you should see the new `GetTranscriptions` function in
 
 ![New endpoint](assets/monitoring-new-endpoint.png)
 
-If you look at the environment variables of the `func-std` Function App, you will see that the `TranscriptionsDatabase__accountEndpoint` are already set, this is the setup needed to connect to the Cosmos DB. Your Azure Function has also the role of `Cosmos DB Built-in Data Reader` to be able to read the data from the Cosmos DB.
+If you look at the environment variables of the `func-std` Function App, you will see that the `TranscriptionsDatabase__accountEndpoint` are already set, this is the setup needed to connect to the Cosmos DB. Your Azure Function has also the role of `Cosmos DB Built-in Data Reader` to be able to read the data from the Cosmos DB. Remember, it's the same approach that you used in the Azure Durable Function in the previous lab.
 
 ## Create a load test for the new endpoint
 
@@ -1880,12 +1838,6 @@ Deploy the Azure Durable Function using the same method as before in the Azure F
 
 ---
 
-# Lab 8 : Azure Functions Flex Consumption Plan
-
-## Lab 8 : Summary
-
----
-
 # Closing the workshop
 
 Once you're done with this lab you can delete the resource group you created at the beginning.
@@ -1898,7 +1850,7 @@ az group delete --name <resource-group>
 ```
 
 <!-- 
----
+--- WAITING FOR THE FEATURE TO BE GA ON FLEX CONSUMPTION, THE MENU IS DISABLE FOR NOW.
 
 # Lab 2 : Deploy your Azure Functions using GitHub Actions
 
