@@ -469,8 +469,8 @@ Use this url into your Postman to upload the audio file.
 
 Here are the files that you can use:
 
-- [Microsoft AI](assets/MicrosoftAI.wav)
-- [Azure Functions](assets/AzureFunctions.wav)
+- [Microsoft AI](assets/audios/MicrosoftAI.wav)
+- [Azure Functions](assets/audios/AzureFunctions.wav)
 
 Create a POST request and in the row where you set the key to `audio` for instance then, make sure to select the `file` option in the hidden dropdown menu to be able to select a file in the value field:
 
@@ -1336,7 +1336,7 @@ namespace FuncStd
             [CosmosDBInput(
                 databaseName: "%COSMOS_DB_DATABASE_NAME%",
                 containerName: "%COSMOS_DB_CONTAINER_ID%",
-                Connection = "TranscriptionsDatabase",
+                Connection = "COSMOS_DB",
                 SqlQuery = "SELECT * FROM c ORDER BY c._ts DESC OFFSET 0 LIMIT 50")
             ] IEnumerable<Transcription> transcriptions
         )
@@ -1458,7 +1458,7 @@ If you look at the environment variables of the `func-std` Function App, you wil
 1. Locate the Function App in the Azure Portal which start with `func-std`
 1. Click on the `Load Testing (Preview)` blade
 1. Click on the `Create test` button
-1. Select the existing Azure Load Testing resource for your resource group and provide a short name and description of the test:
+1. Select the existing Azure Load Testing resource inside your resource group and provide a short name and description of the test:
 
 ![Create test](assets/monitoring-create-test.png)
 
@@ -1493,7 +1493,7 @@ As the test starts, you will see a `Load test results` dashboard with various me
 
 ![Average response time](assets/monitoring-average-time-when-succeeded.png)
 
-As you can see the response time decrease as the number of requests increase, to arrive to approximately 150ms at the end of the test.
+As you can see the response time average is 113ms.
 
 </details>
 
@@ -1511,7 +1511,7 @@ Let's start by playing with the `ERROR_RATE` environment variable to simulate er
 
 ![Set Error Rate](assets/azure-function-app-error-rate.png)
 
-Wait for the end of the test.
+Go back to the **Load Testing** menu and re run to the end of the test to see the new result.
 
 <div class="task" data-title="Task">
 
@@ -1570,7 +1570,7 @@ Then run the load test again and wait for the end of the test.
 
 1. Use the `Performance` blade or click on the response time chart
 1. You should see the duration taken by each operation
-1. Zoom into a range where the latency was injected, you should see the `GetTransactions` operation be unnaturally slow (+3 seconds) and you should see a red arrow on the right of the operation together with the percentage of increase in latency. That is the endpoint to investigate.
+1. Zoom into a range where the latency was injected, you should see the `GetTransactions` operation be unnaturally slow (+3 seconds) and you should see a red arrow on the right of the operation together with the percentage of increase in latency. This is the endpoint to investigate.
 
 ![Latency details](assets/monitoring-get-transcriptions-performances.png)
 
@@ -1578,14 +1578,15 @@ Then run the load test again and wait for the end of the test.
 
 [azure-load-testing-setup]:  https://learn.microsoft.com/en-us/azure/load-testing/how-to-create-load-test-function-app
 
+You can now reset the `LATENCY_IN_SECONDS` to `0` to continue the next lab.
 
-## Lab 5 : Summary
+## Lab 4 : Summary
 
-AS you can see, Azure Load Testing is a powerful tool that allows you to simulate high volumes of user traffic on your applications and identify potential performance bottlenecks. By using Azure Load Testing, you can ensure that your applications can handle high loads and provide a seamless user experience.
+As you can see, Azure Load Testing is a powerful tool that allows you to simulate high volumes of user traffic on your applications and identify potential performance bottlenecks or detect issues in your implementation. By using Azure Load Testing, you can ensure that your applications can handle high loads and provide a seamless user experience.
 
 ---
 
-# Lab 6 : Integrate the Azure Functions with APIM
+# Lab 5 : Integration with Azure API Management
 
 Let's now integrate the Azure Functions with Azure API Management (APIM) to expose the transcription of the audio file as an API. 
 
@@ -1714,7 +1715,7 @@ Then you can copy the subscription key and add it in the header of your request 
 ![Postman Test](assets/apim-postman-sucess-result.png)
 
 
-## Lab 6 : Summary
+## Lab 5 : Summary
 
 At the end of this lab you should have an Azure Function exposed as an API in Azure API Management. You should be able to call this API with a subscription key to upload an audio file to the storage account.
 
@@ -1722,7 +1723,7 @@ At the end of this lab you should have an Azure Function exposed as an API in Az
 
 ---
 
-# Lab 7 : Use Azure Functions for Azure Open AI
+# Lab 6 : Use Azure Functions for Azure Open AI
 
 In this lab you will use Azure Functions to call the Azure Open AI service to analyse the transcription of the audio file and add some information to the Cosmos DB entry.
 
@@ -1735,37 +1736,16 @@ You will go back to the Azure Durable Function you did in the previous lab and a
 Inside your `FuncDurable` let's add the following version of `Microsoft.Azure.Functions.Worker.Extensions.OpenAI`:
 
 ```bash
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 0.16.0-alpha
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 0.17.0-alpha
 ```
 
 ### Add environment variables
 
-To be able to connect the Azure Function to the Azure Open AI service, you will need to set the `AZURE_OPENAI_ENDPOINT` and the `CHAT_MODEL_DEPLOYMENT_NAME` environment variable in your `local.settings.json` locally:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONNECTION_STRING": "<your-storage-account-connection-string>",
-    "STORAGE_ACCOUNT_CONTAINER": "audios",
-    "SPEECH_TO_TEXT_ENDPOINT": "<your-speech-to-text-endpoint>",
-    "SPEECH_TO_TEXT_API_KEY": "<your-speech-to-text-api-key>",
-    "COSMOS_DB_CONNECTION_STRING": "<your-cosmos-db-connection-string>",
-    "COSMOS_DB_DATABASE_NAME": "HolDb",
-    "COSMOS_DB_CONTAINER_ID": "audios_transcripts",
-    "AZURE_OPENAI_ENDPOINT": "<your-azure-open-ai-endpoint>",
-    "CHAT_MODEL_DEPLOYMENT_NAME": "gpt-35-turbo"
-  }
-}
-```
-
-To retrieve the `AZURE_OPENAI_ENDPOINT` you can go to the Azure Open AI service and find it in the **Keys and Endpoint** section.
+To be able to connect the Azure Function to the Azure Open AI service, you will need to set the `AZURE_OPENAI_ENDPOINT` and the `CHAT_MODEL_DEPLOYMENT_NAME` environment variable. Those variables were already deployed for you using the infrastucture as code. 
 
 ### Add the role to the Azure Function App
 
-The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service.
+The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service using the managed identity mechanism.
 
 Assign the role of `Cognitive Services OpenAI User` to your Azure Function app identity by goind to your Azure Open AI service and in the **Access control (IAM)** section click on the **+ Add** then **Add role assignment** button and select the `Cognitive Services OpenAI User` role.
 
@@ -1827,14 +1807,33 @@ public static AudioTranscription EnrichTranscription(
 }
 ```
 
+Finally, update the step 4 and 5 from the `RunOrchestrator` method in the `AudioTranscriptionOrchestration.cs` to trigger the activity of enrichement of the transcription before saving the result to the Cosmos DB:
+
+```csharp
+// Step4: Enrich the transcription
+AudioTranscription enrichedTranscription = await context.CallActivityAsync<AudioTranscription>(nameof(EnrichTranscription), audioTranscription);
+
+if (!context.IsReplaying) { logger.LogInformation($"Saving transcription of {audioFile.Id} to Cosmos DB"); }
+
+// Step5: Save transcription
+await context.CallActivityAsync(nameof(SaveTranscription), enrichedTranscription);
+
+if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audioFile.Id}"); }
+```
+
 </details>
 
 ## Deployment and testing
 
 Deploy the Azure Durable Function using the same method as before in the Azure Function App starting with `func-drbl-<your-instance-suffix-name>`.
 
+You will see a new property in your Cosmos DB item called `completion` with a summary of the audio made by Azure Open AI: 
 
-## Lab 7 : Summary
+![Open AI Summary Result](assets/open-ai-summary-result.png)
+
+## Lab 6 : Summary
+
+You saw how easy it is to integrate Azure Open AI with Azure Function to enrich your items inside Cosmos DB. You have now a full scenario with your Azure Durable Function!
 
 ---
 
