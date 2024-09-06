@@ -40,13 +40,18 @@ During this workshop you will have the instructions to complete each steps. It i
 
 The goal of the full lab is to upload an audio file to Azure and save the transcripts back inside a Cosmos DB database and enrich these transcriptions with a summary using Azure Open AI. The scenario is as follows:
 
-![Hand's On Lab Architecture](assets/architecture-overview.svg)
+![Hand's On Lab Architecture](assets/architecture-overview.png)
 
-1. You will upload an [audio file](assets/whatstheweatherlike.wav) using a first Azure Function endpoint handling uploads will process the request 
-1. The Azure Function will upload the file to a Storage Account
-1. When the file is uploaded an Azure Durable Function will detect it and start processing it
-1. The audio file is sent to Azure Cognitive Services via the Azure Durable Function. The speech to text cognitive service will process the file and return the result to the Azure Durable Function.
-1. The Azure Durable Function will then store the transcript of the audio file in a Cosmos DB Database
+1. You will use Azure Load Testing to be able to simulate the traffic on your system
+1. The requests to get the transcriptions and upload an audio will all pass through the API Management
+1. The first Azure Function will be a standard one and will be mainly responsible of uploading the audio to the Storage Account.
+1. An event of creation of a new blob (when an audio is uploaded) in the Storage Account will trigger an Event Grid
+1. The Event Grid System Topic will in real time send the event to wake up an Azure Durable Function
+1. The Azure Durable Function will start processing the audio file
+1. Then the Azure Durable Function will send the audio for transcription and ask by interval the speech to text service the status of the transcription
+1. The Speech to text service will return the entire transcription
+1. The transcription will be sent to the Azure Open AI instance to have a summary of the audio
+1. The Azure Durable Function will then store the transcript and his summary in a Cosmos DB Database
 
 You will also discover:
 - How to setup a GitHub Actions workflow to deploy the Azure Functions.
