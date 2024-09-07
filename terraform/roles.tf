@@ -76,18 +76,18 @@ resource "azurerm_role_assignment" "func_drbl_storage_table_data_contributor" {
 
 resource "azurerm_role_assignment" "func_drbl_key_vault_secrets_user" {
   scope                = azurerm_key_vault.this.id
-  role_definition_name = "Key Vault Secrets User" 
+  role_definition_name = "Key Vault Secrets User"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "func_std_monitoring_metrics_publisher" {
   scope                = azurerm_application_insights.func_std.id
-  role_definition_name = "Monitoring Metrics Publisher" 
+  role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = data.azurerm_linux_function_app.func_std.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "func_drbl_monitoring_metrics_publisher" {
   scope                = azurerm_application_insights.func_drbl.id
-  role_definition_name = "Monitoring Metrics Publisher" 
+  role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
