@@ -19,7 +19,6 @@ resource "azurerm_key_vault_access_policy" "azurerm_client_config" {
     "Get",
     "List",
     "Set",
-    "Get",
     "Delete",
     "Purge",
     "Recover"
