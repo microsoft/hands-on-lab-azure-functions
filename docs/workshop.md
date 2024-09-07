@@ -54,10 +54,8 @@ The goal of the full lab is to upload an audio file to Azure and save the transc
 1. The Azure Durable Function will then store the transcript and his summary in a Cosmos DB Database
 
 You will also discover:
-- How to setup a GitHub Actions workflow to deploy the Azure Functions.
 - Use managed identity to secure the access to other Azure services.
 - How to retrieve logs from the Azure Functions.
-- Integrate the Azure Functions with API Management.
 
 ## Programming language
 
@@ -70,7 +68,7 @@ With everything ready let's start the lab 🚀
 Before starting this lab, be sure to set your Azure environment :
 
 - An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code and managed identities.
-- The ability to register the Azure providers on your Azure Subscription if not done yet (you will also have the command lines to run in the Azure Login section later in this lab): `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
+- The ability to register the Azure providers on your Azure Subscription if not done yet (you will also have the command lines to run in the **Sign in to Azure** section later): `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
 - You will also need a GitHub Account (Free, Team or Enterprise)
 
 To retrieve the lab content :
@@ -178,9 +176,9 @@ Let's begin!
 # The tenant id can be easily find by searching for "Tenant properties" in the search bar of the Azure Portal.
 
 # Option 1 : Local Environment or Dev Container
-az login --tenant <your tenant id or domain.com>
+az login --tenant <your-tenant-id or domain.com>
 # Option 2 : Github Codespace : you might need to specify --use-device-code parameter to ease the az cli authentication process
-az login --use-device-code --tenant <your tenant id or domain.com>
+az login --use-device-code --tenant <your-tenant-id or domain.com>
 
 # Display your account details
 az account show
@@ -255,16 +253,15 @@ The deployment should take around 5 minutes to complete, you can continue readin
 
 For this first lab, you will focus on the following scope :
 
-![Hand's On Lab Architecture Lab 1](assets/architecture-lab1.svg)
+![Hand's On Lab Architecture Lab 1](assets/azure-functions-lab1.png)
 
-The Azure Storage Account is used to store data objects, including blobs, file shares, queues, tables, and disks. You will use it to store the audios files inside an `audios` container.
+The Azure Storage Account will be used to store the audios files inside an `audios` container.
 
-To check that everything was created as expected, open the [Azure Portal][az-portal] and select the storage account which is **not** starting with `stfstd` or `stfdrbl` those two are for the Azure Functions.
+To check that everything was created as expected, open the [Azure Portal][az-portal] and select the storage account which is **not** starting with `stfstd` or `stfdrbl` those two are for the the two Azure Functions.
 
 In the third one, you should retrieve your `audios` container:
 
 ![Storage account access keys](assets/storage-account-show-container.png)
-
 
 ## Azure Functions : A bit of theory
 
@@ -602,12 +599,12 @@ In this lab you have secured the access to the Azure Storage Account using a Man
 ---
 
 # Lab 3 : Process the audio file with an Azure Durable Function
- 
-To process the audio file, extract the transcript, save it to Azure Cosmos DB and later ask for a summary with Azure Open AI, you will need to create a Durable Function. Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
 For this lab, you will focus on the following scope :
 
-![Hand's On Lab Architecture Lab](assets/architecture-lab2.svg)
+![Hand's On Lab Architecture Lab](assets/azure-functions-lab3.png)
+
+To process the audio file, extract the transcript, save it to Azure Cosmos DB and later ask for a summary with Azure Open AI, you will need to create an Azure Durable Function to orchestrate all of this process. Azure Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
 ## Detect a file upload event 
 
@@ -1292,6 +1289,10 @@ By now you should have a solution that :
 
 Let's now focus on monitoring the Azure Functions. Azure Application Insights provides a monitoring and logging solution that allows you to monitor the performance and health of your functions. You can use the Azure portal to monitor your functions, view logs, and troubleshoot issues.
 
+In this lab you will focus on this scope:
+
+![Hand's On Lab Architecture Lab](assets/azure-functions-lab4.png)
+
 ## Use Azure Load Testing to simulate the load
 
 Using Azure Load Testing can help identify potential issues (e.g. errors and latency) very early and reduce the impact of these issues on your users.
@@ -1599,7 +1600,9 @@ Previously to test your Azure Function you had to get the Function Url with the 
 
 In fact, with Azure API Management you can expose your Azure Functions as APIs and manage them with policies like authentication, rate limiting, caching, etc. You can manage who can call your Azure Function by providing a subscription key or using OAuth 2.0 authentication.
 
-In this lab you will see how to expose the Azure Function as an API using Azure API Management.
+In this lab you will see how to expose the Azure Function as an API using Azure API Management:
+
+![Hand's On Lab Architecture Lab](assets/azure-functions-lab5.png)
 
 ## Define the API in APIM
 
@@ -1648,7 +1651,7 @@ This will fill all the information needed to create the API in APIM, let's updat
 
 </details>
 
-### What's happen behind the scene?
+### What happened behind the scenes?
 
 If you navigate to the **Backends** section of your APIM you should see a line pointing to the Azure Function App you just imported:
 
@@ -1733,6 +1736,10 @@ At the end of this lab you should have an Azure Function exposed as an API in Az
 In this lab you will use Azure Functions to call the Azure Open AI service to analyse the transcription of the audio file and add some information to the Cosmos DB entry.
 
 You will go back to the Azure Durable Function you did in the previous lab and add a connection to Azure Open AI to be able summarize the transcription you saved.
+
+So the scope of the lab is this one:
+
+![Hand's On Lab Architecture Lab](assets/azure-functions-lab6.png)
 
 ## Setup for Azure Open AI 
 
