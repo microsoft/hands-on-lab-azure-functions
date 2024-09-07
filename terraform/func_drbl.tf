@@ -11,7 +11,7 @@ resource "azapi_resource" "func_drbl" {
       type : "SystemAssigned"
     }
     properties = {
-      serverFarmId = azapi_resource.server_farm.id,
+      serverFarmId = azapi_resource.plan_func_drbl.id,
       functionAppConfig = {
         deployment = {
           storage = {
@@ -55,7 +55,7 @@ resource "azapi_resource" "func_drbl" {
           },
           {
             name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value = azurerm_application_insights.this.connection_string
+            value = format("InstrumentationKey=%s;IngestionEndpoint=https://%s.in.applicationinsights.azure.com/;LiveEndpoint=https://%s.livediagnostics.monitor.azure.com/", azurerm_application_insights.func_drbl.instrumentation_key, var.location, var.location)
           },
           {
             name  = "SPEECH_TO_TEXT_ENDPOINT",
@@ -90,8 +90,8 @@ resource "azapi_resource" "func_drbl" {
     }
   })
   depends_on = [
-    azapi_resource.server_farm,
-    azurerm_application_insights.this,
+    azapi_resource.plan_func_drbl,
+    azurerm_application_insights.func_drbl,
     azurerm_storage_account.func_drbl,
     azurerm_key_vault.this,
     azurerm_cosmosdb_account.this,

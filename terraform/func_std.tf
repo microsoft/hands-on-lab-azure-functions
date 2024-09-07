@@ -11,7 +11,7 @@ resource "azapi_resource" "func_std" {
       type : "SystemAssigned"
     }
     properties = {
-      serverFarmId = azapi_resource.server_farm.id,
+      serverFarmId = azapi_resource.plan_func_std.id,
       functionAppConfig = {
         deployment = {
           storage = {
@@ -42,12 +42,12 @@ resource "azapi_resource" "func_std" {
             value = azurerm_storage_account.func_std.name
           },
           {
-            name  = "AudioUploadStorage__serviceUri",
-            value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
+            name  = "STORAGE_ACCOUNT_CONNECTION_STRING",
+            value = azurerm_storage_account.this.primary_connection_string
           },
           {
-            name  = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
-            value = "Authorization=AAD"
+            name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
+            value = format("InstrumentationKey=%s;IngestionEndpoint=https://%s.in.applicationinsights.azure.com/;LiveEndpoint=https://%s.livediagnostics.monitor.azure.com/", azurerm_application_insights.func_std.instrumentation_key, var.location, var.location)
           },
           {
             name  = "STORAGE_ACCOUNT_CONTAINER",
@@ -78,8 +78,8 @@ resource "azapi_resource" "func_std" {
     }
   })
   depends_on = [
-    azapi_resource.server_farm,
-    azurerm_application_insights.this,
+    azapi_resource.plan_func_std,
+    azurerm_application_insights.func_std,
     azurerm_storage_account.func_std
   ]
 }
