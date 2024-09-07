@@ -22,7 +22,12 @@ resource "azurerm_storage_account" "func_std" {
   account_replication_type        = "LRS"
   allow_nested_items_to_be_public = false
   tags                            = local.tags
+}
 
+resource "azurerm_storage_container" "func_std_deployment" {
+  name                  = local.function_deployment_package_container
+  storage_account_name  = azurerm_storage_account.func_std.name
+  container_access_type = "private"
 }
 
 resource "azurerm_storage_account" "func_drbl" {
@@ -33,4 +38,10 @@ resource "azurerm_storage_account" "func_drbl" {
   account_replication_type        = "LRS"
   allow_nested_items_to_be_public = false
   tags                            = local.tags
+}
+
+resource "azurerm_storage_container" "func_drbl_deployment" {
+  name                  = local.function_deployment_package_container
+  storage_account_name  = azurerm_storage_account.func_drbl.name
+  container_access_type = "private"
 }

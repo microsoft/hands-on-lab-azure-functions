@@ -17,7 +17,7 @@ variable "application" {
 variable "location" {
   description = "Azure deployment location"
   type        = string
-  default     = "eastus2"
+  default     = "swedencentral"
 }
 
 variable "resource_group_name_suffix" {
@@ -30,16 +30,4 @@ variable "tags" {
   type        = map(any)
   description = "The custom tags for all resources"
   default     = {}
-}
-
-variable "user_id" {
-  description = "The user id to assign the Contributor role to the resource group"
-  type        = string
-  default     = ""
-}
-
-variable "create_managed_identity" {
-  description = "The managed identity to be used to deploy the Azure Function App"
-  type        = bool
-  default     = true
 }
