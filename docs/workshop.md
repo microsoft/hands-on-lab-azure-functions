@@ -3,7 +3,7 @@ published: true
 type: workshop
 title: Product Hands-on Lab - Azure Functions
 short_title: Azure Functions
-description: This workshop will cover the integration of Azure Functions service with other Azure service. You will use it to build a complete real world scenario.
+description: This workshop will cover the integration of Azure FunctionsFlex Consumption service with other Azure service. You will use it to build a complete real world scenario.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
 navigation_numbering: false
 authors: # Required. You can add as many authors as needed
@@ -14,14 +14,14 @@ contacts: # Required. Must match the number of authors
   - "@ikhemissi"
   - "@justrebl"
   - "@damienaicheh"
-duration_minutes: 180
+duration_minutes: 360
 tags: azure, azure functions, azure durable functions, flex, apim, monitoring, cosmos db, github actions, csu, codespace, devcontainer
 navigation_levels: 3
 ---
 
 # Product Hands-on Lab - Azure Functions
 
-Welcome to this Azure Functions Workshop. You'll be experimenting with Azure Functions service in multiple labs to achieve a real world scenario. We will use the Azure Functions flex consumption plan for all of these labs which contains the latest features of Azure Functions. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
+Welcome to this Azure Functions Workshop. You'll be experimenting with Azure Functions service in multiple labs to achieve a real world scenario. We will use the Azure Functions Flex consumption plan for all of these labs which contains the latest features of Azure Functions. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
 
 During this workshop you will have the instructions to complete each steps. It is recommended to search for the answers in provided resources and links before looking at the solutions placed under the '📚 Toggle solution' panel.
 
