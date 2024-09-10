@@ -1,9 +1,9 @@
 ---
 published: true
 type: workshop
-title: Product Hands-on Lab - Azure Functions
+title: Product Hands-on Lab - Azure Functions deep dive
 short_title: Azure Functions
-description: This workshop will cover the integration of Azure FunctionsFlex Consumption service with other Azure service. You will use it to build a complete real world scenario.
+description: This workshop will cover the integration of Azure Functions Flex Consumption service with other Azure service. You will use it to build a complete real world scenario.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
 navigation_numbering: false
 authors: # Required. You can add as many authors as needed
@@ -15,7 +15,7 @@ contacts: # Required. Must match the number of authors
   - "@justrebl"
   - "@damienaicheh"
 duration_minutes: 360
-tags: azure, azure functions, azure durable functions, flex, apim, monitoring, cosmos db, github actions, csu, codespace, devcontainer
+tags: azure, azure functions, azure durable functions, flex, open ai, apim, monitoring, cosmos db, csu, codespace, devcontainer
 navigation_levels: 3
 ---
 
