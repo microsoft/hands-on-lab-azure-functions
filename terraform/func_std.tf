@@ -42,8 +42,8 @@ resource "azapi_resource" "func_std" {
             value = azurerm_storage_account.func_std.name
           },
           {
-            name  = "STORAGE_ACCOUNT_CONNECTION_STRING",
-            value = azurerm_storage_account.this.primary_connection_string
+            name  = "AudioUploadStorage__serviceUri",
+            value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
           },
           {
             name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
