@@ -34,16 +34,16 @@ resource "azapi_resource" "func_std" {
       siteConfig = {
         appSettings = [
           {
-            name  = "AzureWebJobsStorage",
-            value = azurerm_storage_account.func_std.primary_connection_string
-          },
-          {
             name  = "AzureWebJobsStorage__accountName",
             value = azurerm_storage_account.func_std.name
           },
           {
             name  = "AudioUploadStorage__serviceUri",
             value = format("https://%s.blob.core.windows.net", azurerm_storage_account.this.name)
+          },
+          {
+            name  = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+            value = "Authorization=AAD"
           },
           {
             name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",

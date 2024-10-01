@@ -43,19 +43,19 @@ The goal of the full lab is to upload an audio file to Azure and save the transc
 ![Hand's On Lab Architecture](assets/architecture-overview.png)
 
 1. You will use Azure Load Testing to be able to simulate the traffic on your system
-1. The requests to get the transcriptions and upload an audio will all pass through the API Management
-1. The first Azure Function will be a standard one and will be mainly responsible of uploading the audio to the Storage Account.
-1. An event of creation of a new blob (when an audio is uploaded) in the Storage Account will trigger an Event Grid
-1. The Event Grid System Topic will in real time send the event to wake up an Azure Durable Function
+1. All requests will go through APIM (API Management). This includes the requests for fetching transcriptions and for uploading audio files.
+1. The first Azure Function (standard function) will be mainly responsible of uploading the audio file to the Storage Account.
+1. Whenever a blob is uploaded to the Storage Account, a BlobCreated event will be emitted to Event Grid
+1. The Event Grid System Topic will push the event (in real time) to trigger the Azure Durable Function
 1. The Azure Durable Function will start processing the audio file
-1. Then the Azure Durable Function will send the audio for transcription and ask by interval the speech to text service the status of the transcription
-1. The Speech to text service will return the entire transcription
-1. The transcription will be sent to the Azure Open AI instance to have a summary of the audio
-1. The Azure Durable Function will then store the transcript and his summary in a Cosmos DB Database
+1. The Azure Durable Function will use the Speech To Text service for audio transcription. It will use the Monitor pattern to check every few seconds if the transcription is done.
+1. The Azure Durable Function will retrieve the transcription from the Speech to Text service
+1. The Azure Durable Function will use Azure Open AI to generate a summary of the audio file from the transcription
+1. The Azure Durable Function will then store the transcription and its summary in Cosmos DB
 
-You will also discover:
-- Use managed identity to secure the access to other Azure services.
-- How to retrieve logs from the Azure Functions.
+You will also learn:
+- How to use managed identity to secure the access to Azure services.
+- How to monitor and observe Azure Functions
 
 ## Programming language
 
@@ -68,8 +68,8 @@ With everything ready let's start the lab 🚀
 Before starting this lab, be sure to set your Azure environment :
 
 - An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code and managed identities.
-- The ability to register the Azure providers on your Azure Subscription if not done yet (you will also have the command lines to run in the **Sign in to Azure** section later): `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
-- You will also need a GitHub Account (Free, Team or Enterprise)
+- The permission to register resource providers on your Azure Subscription (if not done yet). You can find the command lines to run in the **Sign in to Azure** section later: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
+- You will also need a GitHub Account (Free, Team or Enterprise) to clone the workshop and potentially work on it using Github Codespaces.
 
 To retrieve the lab content :
 
@@ -415,12 +415,11 @@ Add the following environment variables to your `local.settings.json` file:
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONTAINER": "audios"
+    "STORAGE_ACCOUNT_CONTAINER": "audios",
+    "AudioUploadStorage": "UseDevelopmentStorage=true"
   }
 }
 ```
-
-To retreive the connection string of your Storage Account, open it in the Azure Portal and go to the `Access keys` tab in the Azure Portal.
 
 To test your function locally, you will need to start the extension `Azurite` to emulate the Azure Storage Account. Just run `Ctrl` + `Shift` + `P` and search for `Azurite: Start`:
 
