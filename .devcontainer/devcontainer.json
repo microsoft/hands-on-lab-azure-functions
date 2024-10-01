@@ -30,6 +30,8 @@
       "extensions": [
         // Azurite : Storage Account Emulator for local Azure Function Debug
         "azurite.azurite",
+        // Azure Storage Account
+        "ms-azuretools.vscode-azurestorage",
         // Language related extensions
         "ms-dotnettools.csharp", 
         "ms-dotnettools.csdevkit",
