@@ -54,6 +54,10 @@ resource "azapi_resource" "func_drbl" {
             value = format("https://%s.queue.core.windows.net", azurerm_storage_account.this.name)
           },
           {
+            name  = "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+            value = "Authorization=AAD"
+          },
+          {
             name  = "APPLICATIONINSIGHTS_CONNECTION_STRING",
             value = format("InstrumentationKey=%s;IngestionEndpoint=https://%s.in.applicationinsights.azure.com/;LiveEndpoint=https://%s.livediagnostics.monitor.azure.com/", azurerm_application_insights.func_drbl.instrumentation_key, var.location, var.location)
           },

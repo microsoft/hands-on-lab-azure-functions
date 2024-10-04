@@ -43,19 +43,19 @@ The goal of the full lab is to upload an audio file to Azure and save the transc
 ![Hand's On Lab Architecture](assets/architecture-overview.png)
 
 1. You will use Azure Load Testing to be able to simulate the traffic on your system
-1. The requests to get the transcriptions and upload an audio will all pass through the API Management
-1. The first Azure Function will be a standard one and will be mainly responsible of uploading the audio to the Storage Account.
-1. An event of creation of a new blob (when an audio is uploaded) in the Storage Account will trigger an Event Grid
-1. The Event Grid System Topic will in real time send the event to wake up an Azure Durable Function
+1. All requests will go through APIM (API Management). This includes the requests for fetching transcriptions and for uploading audio files.
+1. The first Azure Function (standard function) will be mainly responsible of uploading the audio file to the Storage Account.
+1. Whenever a blob is uploaded to the Storage Account, a BlobCreated event will be emitted to Event Grid
+1. The Event Grid System Topic will push the event (in real time) to trigger the Azure Durable Function
 1. The Azure Durable Function will start processing the audio file
-1. Then the Azure Durable Function will send the audio for transcription and ask by interval the speech to text service the status of the transcription
-1. The Speech to text service will return the entire transcription
-1. The transcription will be sent to the Azure Open AI instance to have a summary of the audio
-1. The Azure Durable Function will then store the transcript and his summary in a Cosmos DB Database
+1. The Azure Durable Function will use the Speech To Text service for audio transcription. It will use the Monitor pattern to check every few seconds if the transcription is done.
+1. The Azure Durable Function will retrieve the transcription from the Speech to Text service
+1. The Azure Durable Function will use Azure Open AI to generate a summary of the audio file from the transcription
+1. The Azure Durable Function will then store the transcription and its summary in Cosmos DB
 
-You will also discover:
-- Use managed identity to secure the access to other Azure services.
-- How to retrieve logs from the Azure Functions.
+You will also learn:
+- How to use managed identity to secure the access to Azure services.
+- How to monitor and observe Azure Functions
 
 ## Programming language
 
@@ -68,8 +68,8 @@ With everything ready let's start the lab 🚀
 Before starting this lab, be sure to set your Azure environment :
 
 - An Azure Subscription with the **Owner** role to create and manage the labs' resources entirely and deploy the infrastructure as code and managed identities.
-- The ability to register the Azure providers on your Azure Subscription if not done yet (you will also have the command lines to run in the **Sign in to Azure** section later): `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
-- You will also need a GitHub Account (Free, Team or Enterprise)
+- The permission to register resource providers on your Azure Subscription (if not done yet). You can find the command lines to run in the **Sign in to Azure** section later: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.ApiManagement`, `Microsoft.Web`, `Microsoft.LoadTestService`, `Microsoft.KeyVault`, `Microsoft.EventGrid`.
+- You will also need a GitHub Account (Free, Team or Enterprise) to clone the workshop and potentially work on it using Github Codespaces.
 
 To retrieve the lab content :
 
@@ -263,7 +263,9 @@ In the third one, you should retrieve your `audios` container:
 
 ![Storage account access keys](assets/storage-account-show-container.png)
 
-## Azure Functions : A bit of theory
+## A bit of theory
+
+### Azure Functions
 
 Azure Functions is a `compute-on-demand` solution, offering a common function programming model for various languages. To use this serverless solution, no need to worry about deploying and maintaining infrastructures, Azure provides with the necessary up-to-date compute resources needed to keep your applications running. Focus on your code and let Azure Functions handle the rest.
 
@@ -276,7 +278,7 @@ In the same `Function App` you will be able to add multiple `functions`, each wi
 
 Azure Functions run and benefit from the App Service platform, offering features like: deployment slots, continuous deployment, HTTPS support, hybrid connections and others. Apart from the `Flex Consumption` (Serverless) model we're most interested in this Lab, Azure Functions can also be deployed a dedicated `Consumption`, `App Service Plan` or in a hybrid model called `Premium Plan`.
 
-## Managed identities
+### Managed identities
 
 Security is our first concern at Microsoft. To avoid any credential management the best practice is to use managed identities on Azure. They offer several key benefits:
 
@@ -287,7 +289,7 @@ Security is our first concern at Microsoft. To avoid any credential management t
 
 In all the labs you will use Managed Identities only.
 
-## Azure Functions : Let's practice
+## Creating the Function App
 
 At this stage in our scenario, the goal is to upload an audio into the Storage Account inside the `audios` container. To achieve this, an Azure Function will be used as an API to upload the audio file with a unique `GUID` name to your Storage Account.
 
@@ -314,7 +316,7 @@ At this stage in our scenario, the goal is to upload an audio into the Storage A
 <details>
 <summary>📚 Toggle solution</summary>
 
-If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions`.
+If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions/Lab1FuncStd`.
 
 ### Preparation
 
@@ -403,9 +405,9 @@ public AudioUploadOutput Run(
 
 </details>
 
-### Testing
+## Testing locally
 
-#### Run the function locally
+### Run the function locally
 
 Add the following environment variables to your `local.settings.json` file:
 
@@ -415,12 +417,11 @@ Add the following environment variables to your `local.settings.json` file:
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "STORAGE_ACCOUNT_CONTAINER": "audios"
+    "STORAGE_ACCOUNT_CONTAINER": "audios",
+    "AudioUploadStorage": "UseDevelopmentStorage=true"
   }
 }
 ```
-
-To retreive the connection string of your Storage Account, open it in the Azure Portal and go to the `Access keys` tab in the Azure Portal.
 
 To test your function locally, you will need to start the extension `Azurite` to emulate the Azure Storage Account. Just run `Ctrl` + `Shift` + `P` and search for `Azurite: Start`:
 
@@ -450,10 +451,34 @@ rm -rf bin/ && rm -rf obj/ && func start
 
 </div>
 
+### Upload an audio file
 
-### Deployment
+Upload an audio file to Azurite's blob storage using the function running locally.
 
-#### Option 1 : Deploy your function with VS Code
+To do that you can use one of the sample audio files provided in the workshop:
+
+- [Microsoft AI](assets/audios/MicrosoftAI.wav)
+- [Azure Functions](assets/audios/AzureFunctions.wav)
+
+Next, run the following command to upload the audio file. You can also use Postman or another HTTP client if you have previously opted for using a dev container or a local dev environment.
+
+```sh
+curl -v -F audio=@docs/assets/audios/MicrosoftAI.wav http://localhost:7071/api/AudioUpload
+```
+
+### Check blob creation
+
+Finally, make sure that the audio file was saved in Azurite as a blob with the name `[GUID].wav`.
+
+We will use the [Azure Storage extension][azure-storage-extension] to list available blobs in the `audios` container in Azurite (Local Emulator):
+
+![Start Azurite](assets/azurite-explorer.png)
+
+You can repeat the same test commands to ensure new files get saved in Azurite whenever you upload a file using the function running locally.
+
+## Deployment to Azure
+
+### Option 1 : Deploy your function with VS Code
 
 - Open the Azure extension in VS Code left panel
 - Make sure you're signed in to your Azure account
@@ -463,7 +488,7 @@ rm -rf bin/ && rm -rf obj/ && func start
 
 ![Deploy to Function App](assets/function-app-deploy.png)
 
-#### Option 2 : Deploy your function with the Azure Function Core Tools
+### Option 2 : Deploy your function with the Azure Function Core Tools
 
 Deploy your function using the VS Code extension or by command line:
 
@@ -472,16 +497,16 @@ Deploy your function using the VS Code extension or by command line:
 func azure functionapp publish func-std-<your-instance-suffix-name>
 ```
 
-### Test with Postman
+## Test the Function App deployed in Azure
 
-Let's give a try using Postman. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`. 
+Let's give the new function a try using Postman. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`. 
 The Azure Function url is protected by a code to ensure a basic security layer. 
 
 ![Azure Function url credentials](assets/func-url-credentials.png)
 
 Use this url into your Postman to upload the audio file. 
 
-Here are the files that you can use:
+You can use the provided sample audio files to test the function:
 
 - [Microsoft AI](assets/audios/MicrosoftAI.wav)
 - [Azure Functions](assets/audios/AzureFunctions.wav)
@@ -494,7 +519,7 @@ If you go back to the Storage Account, you should see inside the `audios` contai
 
 </details>
 
-### Save your changes
+## Save your changes
 
 Don't forget to commit your changes to your forked repository to keep track of your progress. **You will need the code for the next labs.**
 
@@ -529,7 +554,7 @@ The first Azure Function API created in the Lab offers a first security layer to
 [in-process-vs-isolated]: https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-in-process-differences
 [blob-output]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cin-process&pivots=programming-language-csharp
 [azure-managed-identity]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cisolated-process%2Cnodejs-v4&pivots=programming-language-csharp#identity-based-connections
-
+[azure-storage-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage#:~:text=Installation.%20Download%20and%20install%20the%20Azure%20Storage%20extension%20for%20Visual
 ---
 
 # Lab 2 : Process the audio file with an Azure Durable Function

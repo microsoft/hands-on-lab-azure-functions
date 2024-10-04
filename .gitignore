@@ -17,6 +17,9 @@ __azurite_*
 *.tfstate
 *.tfstate.*
 
+# local settings file
+local.settings.json
+
 # dev tf files
 tf
 plan.out
