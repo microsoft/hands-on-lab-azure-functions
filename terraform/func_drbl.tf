@@ -87,7 +87,7 @@ resource "azapi_resource" "func_drbl" {
           },
           {
             name  = "CHAT_MODEL_DEPLOYMENT_NAME",
-            value = azurerm_cognitive_deployment.gpt_35_turbo.name
+            value = azurerm_cognitive_deployment.gpt_4o_mini.name
           }
         ]
       }

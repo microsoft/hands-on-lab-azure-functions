@@ -46,4 +46,8 @@ resource "azurerm_key_vault_secret" "speech_to_text_api_key" {
       value
     ]
   }
+
+  depends_on = [
+    azurerm_key_vault_access_policy.azurerm_client_config
+  ]
 }
