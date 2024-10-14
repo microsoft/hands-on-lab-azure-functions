@@ -555,6 +555,7 @@ The first Azure Function API created in the Lab offers a first security layer to
 [blob-output]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cin-process&pivots=programming-language-csharp
 [azure-managed-identity]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cisolated-process%2Cnodejs-v4&pivots=programming-language-csharp#identity-based-connections
 [azure-storage-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage#:~:text=Installation.%20Download%20and%20install%20the%20Azure%20Storage%20extension%20for%20Visual
+
 ---
 
 # Lab 2 : Process the audio file with an Azure Durable Function
@@ -1729,7 +1730,7 @@ This role was already assigned to your Azure Function when it was provisioned at
 <details>
 <summary>📚 Toggle solution</summary>
 
-You can confirm this by going to your Azure Open AI service and in the **Access control (IAM)** section click on the **Role assignment** table and locate the `Cognitive Services OpenAI User` role (you can directly filter assignment by role).
+You can confirm this by going to your Azure Open AI service and in the **Access control (IAM)** section click on the **Role assignment** table and locate the `Cognitive Services OpenAI User` role (you can directly filter assignments by role).
 
 You should see that the Durable function's Function App has the role `Cognitive Services OpenAI User`.
 
