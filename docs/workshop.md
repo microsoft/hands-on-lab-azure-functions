@@ -38,19 +38,19 @@ During this workshop you will have the instructions to complete each steps. It i
 
 ## Scenario
 
-The goal of the full lab is to upload an audio file to Azure and save the transcripts back inside a Cosmos DB database and enrich these transcriptions with a summary using Azure Open AI. The scenario is as follows:
+The goal of the full lab is to upload an audio file to Azure and save the transcripts back inside a Cosmos DB database and enrich these transcriptions with a summary using Azure OpenAI. The scenario is as follows:
 
 ![Hand's On Lab Architecture](assets/architecture-overview.png)
 
 1. You will use Azure Load Testing to be able to simulate the traffic on your system
 1. All requests will go through APIM (API Management). This includes the requests for fetching transcriptions and for uploading audio files.
-1. The first Azure Function (standard function) will be mainly responsible of uploading the audio file to the Storage Account.
-1. Whenever a blob is uploaded to the Storage Account, a BlobCreated event will be emitted to Event Grid
+1. The first Azure Function (standard function) will be mainly responsible for uploading the audio file to the Storage Account.
+1. Whenever a blob is uploaded to the Storage Account, a `BlobCreated` event will be emitted to Event Grid
 1. The Event Grid System Topic will push the event (in real time) to trigger the Azure Durable Function
 1. The Azure Durable Function will start processing the audio file
 1. The Azure Durable Function will use the Speech To Text service for audio transcription. It will use the Monitor pattern to check every few seconds if the transcription is done.
 1. The Azure Durable Function will retrieve the transcription from the Speech to Text service
-1. The Azure Durable Function will use Azure Open AI to generate a summary of the audio file from the transcription
+1. The Azure Durable Function will use Azure OpenAI to generate a summary of the audio file from the transcription
 1. The Azure Durable Function will then store the transcription and its summary in Cosmos DB
 
 You will also learn:
@@ -82,9 +82,9 @@ To retrieve the lab content :
 
 <div class="tip" data-title="Tips">
 
-> - To focus on the main purpose of the lab, we encourage the usage of codespace or devcontainer as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
+> - To focus on the main purpose of the lab, we encourage the usage of codespace or DevContainer as they abstract the dev environment configuration, and avoid potential local dependencies conflict.
 > 
-> - You could decide to run everything without relying on a devcontainer : To do so, make sure you install all the prerequisites detailed below.
+> - You could decide to run everything without relying on a DevContainer : To do so, make sure you install all the prerequisites detailed below.
 
 </div>
 
@@ -96,7 +96,7 @@ To use a Github Codespace, you will need :
 Github Codespace offers the ability to run a complete dev environment (Visual Studio Code, Extensions, Tools, Secure port forwarding etc.) on a dedicated virtual machine. 
 The configuration for the environment is defined in the `.devcontainer` folder, making sure everyone gets to develop and practice on identical environments : No more conflict on dependencies or missing tools ! 
 
-Every Github account (even the free ones) grants access to 120 vcpu hours per month, _**for free**_. A 2 vcpu dedicated environment is enough for the purpose of the lab, meaning you could run such environment for 60 hours a month at no cost!
+Every Github account (even the free ones) grants access to 120 vCPU hours per month, _**for free**_. A 2 vCPU dedicated environment is enough for the purpose of the lab, meaning you could run such environment for 60 hours a month at no cost!
 
 To get your codespace ready for the labs, here are a few steps to execute : 
 - After you forked the repo, click on `<> Code`, `Codespaces` tab and then click on the `+` button:
@@ -109,7 +109,7 @@ To get your codespace ready for the labs, here are a few steps to execute :
 
 ### 🥈 : Using a local Devcontainer
 
-This repo comes with a Devcontainer configuration that will let you open a fully configured dev environment from your local Visual Studio Code, while still being completely isolated from the rest of your local machine configuration : No more dependancy conflict.
+This repo comes with a Devcontainer configuration that will let you open a fully configured dev environment from your local Visual Studio Code, while still being completely isolated from the rest of your local machine configuration : No more dependency conflict.
 Here are the required tools to do so : 
 
 - [Git client][git-client] 
@@ -209,13 +209,13 @@ az provider register --namespace 'Microsoft.EventGrid'
 
 You must deploy the infrastructure before starting the lab. 
 
-First, you need to initialize the terraform infrastructure by running the following command:
+First, you need to initialize the Terraform infrastructure by running the following command:
 
 ```bash
 cd terraform && terraform init
 ```
 
-Since Azurerm Terraform provider version 4 you need to specify the subscription id to be able to deploy, so you must retreive it and expose it using the environmnet variable `ARM_SUBSCRIPTION_ID` like this:
+Since `azurerm` Terraform provider version 4 you need to specify the Subscription ID to be able to deploy, so you must retrieve it and expose it using the environment variable `ARM_SUBSCRIPTION_ID` like this:
 
 ```bash
 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
@@ -227,7 +227,7 @@ Then run the following command to deploy the infrastructure if you have the **Ow
 terraform plan -out plan.out
 ```
 
-Finally apply the deployment:
+Finally, apply the deployment:
 
 ```bash
 terraform apply plan.out
@@ -255,9 +255,9 @@ For this first lab, you will focus on the following scope :
 
 ![Hand's On Lab Architecture Lab 1](assets/azure-functions-lab1.png)
 
-The Azure Storage Account will be used to store the audios files inside an `audios` container.
+The Azure Storage Account will be used to store the audios files inside the `audios` container.
 
-To check that everything was created as expected, open the [Azure Portal][az-portal] and select the storage account which is **not** starting with `stfstd` or `stfdrbl` those two are for the the two Azure Functions.
+To check that everything was created as expected, open the [Azure Portal][az-portal] and select the storage account which is **not** starting with `stfstd` or `stfdrbl` those two are for the two Azure Functions.
 
 In the third one, you should retrieve your `audios` container:
 
@@ -269,9 +269,9 @@ In the third one, you should retrieve your `audios` container:
 
 Azure Functions is a `compute-on-demand` solution, offering a common function programming model for various languages. To use this serverless solution, no need to worry about deploying and maintaining infrastructures, Azure provides with the necessary up-to-date compute resources needed to keep your applications running. Focus on your code and let Azure Functions handle the rest.
 
-Azure Functions are event-driven : They must be triggered by an event coming from a variety of sources. This model is based on a set of `triggers` and `bindings` which let you avoid hardcoding access to other services. Your function receives data (for example, the content of a queue message) in function parameters. You send data (for example, to create a queue message) by using the return value of the function :
+Azure Functions are event-driven : They must be triggered by an event coming from a variety of sources. This model is based on a set of `triggers` and `bindings` which let you avoid hard-coding access to other services. Your function receives data (for example, the content of a queue message) in function parameters. You send data (for example, to create a queue message) by using the return value of the function :
 
-- `Binding` to a function is a way of declaratively connecting another resource to the function; bindings may be connected as input bindings, output bindings, or both. Azure services such as Azure Storage blobs and queues, Service Bus queues, Event Hubs, and Cosmos DB provide data to the function as parameters.
+- `Binding` to a function is a way of connecting another resource to the function in a declarative way; bindings can be used to fetch data (input bindings), write data (output bindings), or both. Azure services such as Azure Storage blobs and queues, Service Bus queues, Event Hubs, and Cosmos DB provide data to the function as parameters.
 - `Triggers` are a specific kind of binding that causes a function to run. A trigger defines how a function is invoked, and a function must have exactly one trigger. Triggers have associated data, which is often provided as a parameter payload to the function.
 
 In the same `Function App` you will be able to add multiple `functions`, each with its own set of triggers and bindings. These triggers and bindings can benefit from existing `expressions`, which are parameter conventions easing the overall development experience. For example, you can use an expression to use the execution timestamp, or generate a unique `GUID` name for a file uploaded to a storage account.
@@ -280,18 +280,18 @@ Azure Functions run and benefit from the App Service platform, offering features
 
 ### Managed identities
 
-Security is our first concern at Microsoft. To avoid any credential management the best practice is to use managed identities on Azure. They offer several key benefits:
+Security is our first concern at Microsoft. To avoid any credential management issues, the best practice is to use managed identities on Azure. They offer several key benefits:
 
 - **Enhanced Security**: Managed identities eliminate the need to store credentials in your code, reducing the risk of accidental leaks or breaches.
 - **Simplified Credential Management**: Azure automatically handles the lifecycle of these identities, so you don’t need to manually manage secrets, passwords, or keys.
 - **Seamless Integration**: Managed identities can authenticate to any Azure service that supports Microsoft Entra ID authentication, making it easier to connect and secure your applications.
 - **Cost Efficiency**: There are no additional charges for using managed identities, making it a cost-effective solution for securing your Azure resources.
 
-In all the labs you will use Managed Identities only.
+In this workshop, we will only be using Managed Identities to secure service-to-service communications.
 
 ## Creating the Function App
 
-At this stage in our scenario, the goal is to upload an audio into the Storage Account inside the `audios` container. To achieve this, an Azure Function will be used as an API to upload the audio file with a unique `GUID` name to your Storage Account.
+At this stage in our scenario, the goal is to upload an audio file into the Storage Account inside the `audios` container. To achieve this, an Azure Function will be used as an API to upload the audio file with a unique `GUID` name to your Storage Account.
 
 <div class="task" data-title="Tasks">
 
@@ -316,7 +316,7 @@ At this stage in our scenario, the goal is to upload an audio into the Storage A
 <details>
 <summary>📚 Toggle solution</summary>
 
-If necessary the source code with the solutions can be found in this Github Repository, under `./src/solutions/Lab1FuncStd`.
+You can refer to the solutions in the workshop's Github Repository, under `./src/solutions/Lab1FuncStd`.
 
 ### Preparation
 
@@ -350,7 +350,8 @@ Now that you have a skeleton for our `AudioUpload` function in the `AudioUpload.
 
 To upload the file, you will rely on the blob output binding [`BlobOutput`][blob-output] of the Azure Function, which will take care of the logic of connecting to the Storage Account and uploading the function with minimal line of code in our side.
 
-To do this, let's start by adding a `AudioUploadOutput` class to the `AudioUpload.cs` file for simplicity but it can be done in a specific class.
+To do this, let's start by adding a `AudioUploadOutput` class to the `AudioUpload.cs` file.
+For simplicity reasons we are reusing the existing file to add the class, but keep in mind that you can also opt for adding it in its own dedicated file.
 
 ```csharp
 public class AudioUploadOutput
@@ -366,11 +367,11 @@ This class will handle uploading the blob and returning the HTTP response:
 
 - The blob will be stored in the container identified by `STORAGE_ACCOUNT_CONTAINER` which is an environment variable.
 - The blob will be named `{rand-guid}.wav` which resolves to a UUID followed by `.wav`.
-- `AudioUploadStorage` is the name of the prefix in the App setting which will be used to connect to the blob storage account using a managed identity. Behind the sceneds the Azure Function will search for a concatenation of this connection name with `__serviceUri` to connect to the Storage Account. 
+- `AudioUploadStorage` is the name of the prefix in the App setting which will be used to connect to the blob storage account using a managed identity. Behind the scenes the Azure Function will fetch the app setting called `AudioUploadStorage__serviceUri` and use it to connect to the Storage Account where audio files are uploaded. 
 
-In fact if you open the Azure Function App resource started with `func-std` in the [Azure Portal][az-portal] and go to the `Environment variables` panel. You should see in App Settings the `STORAGE_ACCOUNT_CONTAINER` set to `audios` and another entry called `AudioUploadStorage__serviceUri` use the managed identity.
+In fact if you open the Azure Function App resource started with `func-std` in the [Azure Portal][az-portal] and go to the `Environment variables` panel. You should see in App Settings the `STORAGE_ACCOUNT_CONTAINER` set to `audios` and another entry called `AudioUploadStorage__serviceUri` used to locate the storage account.
 
-Also the role of `Storage Blob Data Owner` was already be inside to your Azure Function app identity. This role and the `AudioUploadStorage__serviceUri` environment variable will enable the use of managed identy mecanism, so you don't need to use any connection string to connec the Azure Function with the Storage account.
+As part of the workshop, the `Storage Blob Data Owner` was already assigned to your Azure Function's managed identity. This role together with the `AudioUploadStorage__serviceUri` environment variable will allow the function to access the Storage account securely without needing to use a connection string.
 
 Next, you will need to update the class `AudioUpload` to add the logic for reading the file from the request, and then use `AudioUploadOutput` to perform the blob upload and returning the response.
 
@@ -445,9 +446,9 @@ rm -rf bin/ && rm -rf obj/ && func start
 
 <div class="tip" data-title="Tips">
 
-> - If you are using Github Codespaces for testing and you encounter authentication issues (e.g. 401) or infinite loop, then first make sure the visiblity of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
+> - If you are using Github Codespaces for testing, and you encounter authentication issues (e.g. 401) or infinite loop, then first make sure the visibility of the port `7071` is either set to "Public" or that you are passing a valid Github token in the `X-Github-Token` header.
 > - Please refer to this [port forwarding guide on Github Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace#using-command-line-tools-and-rest-clients-to-access-ports) for more details.
-> - If you are using DevContainers look at the forwared address in the port tab of VS Code.
+> - If you are using a DevContainer, look at the forwarded address in the port tab of VS Code.
 
 </div>
 
@@ -490,7 +491,7 @@ You can repeat the same test commands to ensure new files get saved in Azurite w
 
 ### Option 2 : Deploy your function with the Azure Function Core Tools
 
-Deploy your function using the VS Code extension or by command line:
+Deploy your function using the VS Code extension or via command line:
 
 ```bash
 # Inside the FuncStd folder run the following command:
@@ -499,12 +500,12 @@ func azure functionapp publish func-std-<your-instance-suffix-name>
 
 ## Test the Function App deployed in Azure
 
-Let's give the new function a try using Postman. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`. 
+Let's give the new function a try using [Postman][postman]. Go to the Azure Function and select `Functions` then `AudioUpload` and select the `Get Function Url` with the `default (function key)`.
 The Azure Function url is protected by a code to ensure a basic security layer. 
 
 ![Azure Function url credentials](assets/func-url-credentials.png)
 
-Use this url into your Postman to upload the audio file. 
+Use this url with Postman to upload the audio file.
 
 You can use the provided sample audio files to test the function:
 
@@ -515,7 +516,7 @@ Create a POST request and in the row where you set the key to `audio` for instan
 
 ![Postman](assets/func-postman.png)
 
-If you go back to the Storage Account, you should see inside the `audios` container the files that you uploaded with your `AudioUpload` Azure Function!
+Go back to the Storage Account and check the `audios` container. You should see the files that you uploaded with your `AudioUpload` Azure Function!
 
 </details>
 
@@ -523,7 +524,7 @@ If you go back to the Storage Account, you should see inside the `audios` contai
 
 Don't forget to commit your changes to your forked repository to keep track of your progress. **You will need the code for the next labs.**
 
-You can commit directly on the `main` branch for this workshop:
+You can commit directly on the `main` branch of the repository:
 
 Open a terminal and run the following commands:
 
@@ -538,9 +539,7 @@ You are now ready for the next labs!
 
 ## Lab 1 : Summary
 
-By now you should have a solution that :
-
-Send new audio files added to a blob storage using a first Azure Function, inside an `audios` container.
+By now you should have a solution which stores uploaded audio files within a blob storage using a first Azure Function. Audio files are stored inside an `audios` container.
 
 The first Azure Function API created in the Lab offers a first security layer to the solution as it requires a key to be called, as well as makes sure all the files are stores with a uniquely generated name (GUID). We will go further in the next labs.
 
@@ -555,16 +554,24 @@ The first Azure Function API created in the Lab offers a first security layer to
 [blob-output]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cin-process&pivots=programming-language-csharp
 [azure-managed-identity]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output?tabs=python-v2%2Cisolated-process%2Cnodejs-v4&pivots=programming-language-csharp#identity-based-connections
 [azure-storage-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage#:~:text=Installation.%20Download%20and%20install%20the%20Azure%20Storage%20extension%20for%20Visual
+[postman]: https://www.postman.com/
 
 ---
 
 # Lab 2 : Process the audio file with an Azure Durable Function
 
-For this lab, you will focus on the following scope :
+On this lab, you will focus on the following scope :
 
 ![Hand's On Lab Architecture Lab](assets/azure-functions-lab3.png)
 
-To process the audio file, extract the transcript, save it to Azure Cosmos DB and later ask for a summary with Azure Open AI, you will need to create an Azure Durable Function to orchestrate all of this process. Azure Durable Functions are an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
+Processing the audio file involves the following actions:
+- Detecting file uploads
+- Creating a transcript of the file
+- Saving the transcript to Azure Cosmos DB
+- Generating a summary with Azure OpenAI
+
+To ensure the execution of all these steps and to orchestrate all of this process, you will need to create a Durable Function.
+Durable Function is an extension of Azure Functions that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
 ## Detect a file upload event 
 
@@ -577,9 +584,9 @@ Now, you have the audio file uploaded in the storage account, you will need to d
 > - Create a new `Durable Function` with a `Blob Trigger` to detect the file upload event based on Event Grid and start the processing of the audio file.
 >
 > - Use the `func` CLI tool and .NET 8 using the isolated mode to create this Durable Function.
-> - Use the `Audio.cs` file below to instanciate an `AudioFile` object when the Azure Function is triggered.
+> - Use the `Audio.cs` file below to instantiate an `AudioFile` object when the Azure Function is triggered.
 > - Create an `AudioTranscriptionOrchestration.cs` file which will be used to create the orchestration of the entire Azure Function.
-> - Generate a uri with a SAS token to access the blob storage.
+> - Generate a URI with a SAS token to access the blob storage.
 > - Add an Event Grid subscription to detect the upload of audios in real time.
 
 </div>
@@ -728,7 +735,7 @@ As you can see you are using the `BlobTrigger` attribute to detect the file uplo
 
 To detect when a new audio is uploaded in the Storage Account we use the Event Grid service by enabling it with the option: `BlobTriggerSource.EventGrid`.
 
-Then we generate a Sas token to access the blob.
+Then we generate a SAS token to access the blob.
 
 Let's deploy your function using the VS Code extension or by command line to the function stating with `func-drbl`.
 
@@ -752,11 +759,11 @@ https://<FUNCTION_APP_NAME>.azurewebsites.net/runtime/webhooks/blobs?functionNam
 
 ![Create Event Subscription](assets/create-event-subscription.png)
 
-Finally, we just want to detect `.wav` files so we can enable this in the **Filters** tab.
+Finally, we just want to process `.wav` files, so you need to enable this in the **Filters** tab.
 
 ![Event filtering](assets/event-filtering.png)
 
-Finally you can click **Create**.
+Finally, you can click **Create**.
 
 Try to upload a file to the audios container and you should see:
 
@@ -789,8 +796,8 @@ You now want to retrieve the transcript out of the audio file uploaded thanks to
 > - Because the transcription can be a long process, you will use the monitor pattern of the Azure Durable Functions to call the speech to text batch API and check the status of the transcription until it's done.
 >
 > - Use the `SpeechToTextService.cs` file and the `Transcription.cs` model provided below to get the transcription.
-> - A scheleton of the orchestration part will be provided below.
-> - Instanciate an `AudioTranscription` object when the transcription is done, this will be used to store the data in Cosmos DB in the next step.
+> - A skeleton of the orchestration part will be provided below.
+> - Instantiate an `AudioTranscription` object when the transcription is done, this will be used to store the data in Cosmos DB in the next step.
 > - Do not forget to start the orchestration in the `AudioBlobUploadStart` function.
 
 </div>
@@ -1057,7 +1064,7 @@ public static AudioTranscription EnrichTranscription([ActivityTrigger] AudioTran
 <details>
 <summary>📚 Toggle solution</summary>
 
-First, you need to start the orchestration of the transcription of the audio file in the `AudioBlobUploadStart` function you did previously by addind this code at the end:
+First, you need to start the orchestration of the transcription of the audio file in the `AudioBlobUploadStart` function you did previously by adding this code at the end:
 
 ```csharp
 string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(nameof(AudioTranscriptionOrchestration), audioFile);
@@ -1082,7 +1089,7 @@ logger.LogInformation($"Job uri for {audioFile.Id}: {jobUri}");
 return jobUri;
 ```
 
-The goal here is to create a batch transcription using the `SpeechToTextService` and retreive the job uri of the transcription. This job uri will be used to check the status of the transcription and get the transcription itself.
+The goal here is to create a batch transcription using the `SpeechToTextService` and retrieve the job URI of the transcription. This job URI will be used to check the status of the transcription and get the transcription itself.
 
 Then you will need to implement the `CheckTranscriptionStatus` function:
 
@@ -1141,7 +1148,7 @@ var audioTranscription = new AudioTranscription
 };
 ```
 
-The  `SPEECH_TO_TEXT_ENDPOINT` and the `SPEECH_TO_TEXT_API_KEY` environment variables are already set on Azure for you, if you look at the environment variable of your function you will see that for security reason the `SPEECH_TO_TEXT_API_KEY` is refering a Key Vault where the key is.
+The  `SPEECH_TO_TEXT_ENDPOINT` and the `SPEECH_TO_TEXT_API_KEY` environment variables are already set on Azure for you, if you look at the environment variable of your function you will see that for security reason the `SPEECH_TO_TEXT_API_KEY` is referring a Key Vault where the key is.
 
 </details>
 
@@ -1196,9 +1203,9 @@ public static AudioTranscription SaveTranscription([ActivityTrigger] AudioTransc
 
 As you can see, by just defining the binding, the Azure Function will take care of storing the data in the Cosmos DB container, so you just need to return the object you want to store, in this case, the `AudioTranscription` object.
 
-To be able to connect the Azure Function to the Cosmos DB, you have the `COSMOS_DB_DATABASE_NAME`, the `COSMOS_DB_CONTAINER_ID` and the `COSMOS_DB` environment variable. The `COSMOS_DB` will be the connection key that will be concat with `__accountEndpoint` to specify the Cosmos DB account endpoint so it will be able to connect using Managed identity. 
+To be able to connect the Azure Function to the Cosmos DB, you have the `COSMOS_DB_DATABASE_NAME`, the `COSMOS_DB_CONTAINER_ID` and the `COSMOS_DB` environment variables. The `COSMOS_DB` will be the connection key that will be concatenated with `__accountEndpoint` to specify the Cosmos DB account endpoint so it will be able to connect using Managed identity.
 
-Those configuration are already set in the Azure Function App settings (`func-drbl-<your-instance-name>`) when you deployed the infrastructure previously.
+Those environment variables are already set in the Azure Function App settings (`func-drbl-<your-instance-name>`) when you deployed the infrastructure previously.
 
 Now you just need to call the `SaveTranscription` function in the orchestration part of the `AudioTranscriptionOrchestration.cs` file:
 
@@ -1388,7 +1395,7 @@ namespace FuncStd
 
 </details>
 
-Finally add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget package to your project by running the following command:
+Finally, add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget package to your project by running the following command:
 
 ```sh
 dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
@@ -1477,7 +1484,7 @@ Let's start by playing with the `ERROR_RATE` environment variable to simulate er
 
 ![Set Error Rate](assets/azure-function-app-error-rate.png)
 
-Go back to the **Load Testing** menu and re run to the end of the test to see the new result.
+Go back to the **Load Testing** menu and re-run to the end of the test to see the new result.
 
 <div class="task" data-title="Task">
 
@@ -1556,7 +1563,7 @@ As you can see, Azure Load Testing is a powerful tool that allows you to simulat
 
 Let's now integrate the Azure Functions with Azure API Management (APIM) to expose the transcription of the audio file as an API. 
 
-Previously to test your Azure Function you had to get the Function Url with the *default (function key)* to ensure a basic security layer. But in a real-world scenario, you will need to secure your Azure Function and expose it through an API Gateway like Azure API Management.
+Previously to test your Azure Function you had to get the Function URL with the *default (function key)* to ensure a basic security layer. But in a real-world scenario, you will need to secure your Azure Function and expose it through an API Gateway like Azure API Management.
 
 In fact, with Azure API Management you can expose your Azure Functions as APIs and manage them with policies like authentication, rate limiting, caching, etc. You can manage who can call your Azure Function by providing a subscription key or using OAuth 2.0 authentication.
 
@@ -1666,42 +1673,42 @@ By calling the API from this menu, APIM is automatically adding the subscription
 
 ### Test inside Postman
 
-Let's test this in Postman to see how it works. Open the Postman application and copy paste the URL from your API in APIM. It should be inside the **Test** tab:
+Let's test this in Postman to see how it works. Open the Postman application and copy/paste the URL from your API in APIM. It should be inside the **Test** tab:
 
 ![APIM Test URL](assets/apim-test-tab-url.png)
 
 In Postman, create a new request and paste the URL in the URL field. Select the **Body** tab and select **form-data** as the type of the body. Then define `audios` as a key and select your audio file to upload.
 
-Run the request and you should see a `401` status code because you need to add the subscription key in the header of the request. In fact the APIM give you the possibility to protect your API with a subscription key.
+Run the request, and you should see a `401` status code because you need to add the subscription key in the header of the request. In fact the APIM give you the possibility to protect your API with a subscription key.
 
 To do so, go back to your APIM instance and select the **Subscriptions** tab and click on the **+ Add Subscription** button to create a new subscription key dedicated to your API:
 
 ![APIM Add Subscription](assets/apim-create-api-subscription-key.png)
 
-Then you can copy the subscription key and add it in the header of your request in Postman in the `Ocp-Apim-Subscription-Key` key. Run the request again and you should see a `200` status code:
+Then you can copy the subscription key and add it in the header of your request in Postman in the `Ocp-Apim-Subscription-Key` key. Run the request again, and you should see a `200` status code:
 
 ![Postman Test](assets/apim-postman-sucess-result.png)
 
 
 ## Lab 4 : Summary
 
-At the end of this lab you should have an Azure Function exposed as an API in Azure API Management. You should be able to call this API with a subscription key to upload an audio file to the storage account.
+At the end of this lab you should have an Azure Function exposed as an API via Azure API Management. You should be able to call this API with a subscription key to upload an audio file to the storage account.
 
 [import-azure-function-azure-api-management]: https://learn.microsoft.com/en-us/azure/api-management/import-function-app-as-api
 
 ---
 
-# Lab 5 : Use Azure Functions for Azure Open AI
+# Lab 5 : Use Azure Functions with Azure OpenAI
 
-In this lab you will use Azure Functions to call the Azure Open AI service to analyse the transcription of the audio file and add some information to the Cosmos DB entry.
+In this lab you will use Azure Functions to call the Azure OpenAI service to analyze the transcription of the audio file and add some information to the Cosmos DB entry.
 
-You will go back to the Azure Durable Function you did in the previous lab and add a connection to Azure Open AI to be able summarize the transcription you saved.
+You will go back to the Azure Durable Function you did in the previous lab and add a connection to Azure OpenAI to be able to summarize the transcription you saved.
 
 So the scope of the lab is this one:
 
 ![Hand's On Lab Architecture Lab](assets/azure-functions-lab6.png)
 
-## Setup for Azure Open AI 
+## Setup for Azure OpenAI
 
 ### Add the .NET package
 
@@ -1713,11 +1720,11 @@ dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 
 
 ### Add environment variables
 
-To be able to connect the Azure Function to the Azure Open AI service, you will need to set the `AZURE_OPENAI_ENDPOINT` and the `CHAT_MODEL_DEPLOYMENT_NAME` environment variable. Those variables were already deployed for you using the infrastucture as code. 
+To be able to connect the Azure Function to the Azure OpenAI service, you will need to set the `AZURE_OPENAI_ENDPOINT` and the `CHAT_MODEL_DEPLOYMENT_NAME` environment variable. Those variables were already deployed for you using the infrastructure as code. 
 
 ### Add the role to the Azure Function App
 
-The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service using managed identities.
+The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure OpenAI service using managed identities.
 
 This role was already assigned to your Azure Function when it was provisioned at the beginning of the lab.
 
@@ -1730,14 +1737,14 @@ This role was already assigned to your Azure Function when it was provisioned at
 <details>
 <summary>📚 Toggle solution</summary>
 
-You can confirm this by going to your Azure Open AI service and in the **Access control (IAM)** section click on the **Role assignment** table and locate the `Cognitive Services OpenAI User` role (you can directly filter assignments by role).
+You can confirm this by going to your Azure OpenAI service and in the **Access control (IAM)** section click on the **Role assignment** table and locate the `Cognitive Services OpenAI User` role (you can directly filter assignments by role).
 
 You should see that the Durable function's Function App has the role `Cognitive Services OpenAI User`.
 
 </details>
 
 
-## Enrich the transcription with Azure Open AI
+## Enrich the transcription with Azure OpenAI
 
 <div class="task" data-title="Tasks">
 
@@ -1765,7 +1772,7 @@ Make sure to add the following `using` to be able to use the `TextCompletionInpu
 using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
 ```
 
-This will managed for you the authentication to the Azure Open AI service and send the transcription to the service to get a summary of the transcription.
+This will be managed for you the authentication to the Azure OpenAI service and send the transcription to the service to get a summary of the transcription.
 
 Then you just have to consume the `Content` property of the response object and update the `Completion` field of the `AudioTranscription` object:
 
@@ -1773,7 +1780,7 @@ Then you just have to consume the `Content` property of the response object and 
 audioTranscription.Completion = response.Content;
 ```
 
-And that's it, you have now enriched the transcription of the audio file with the Azure Open AI service!
+And that's it, you have now enriched the transcription of the audio file with the Azure OpenAI service!
 
 So, to summarize, the function will look like this:
 
@@ -1791,7 +1798,7 @@ public static AudioTranscription EnrichTranscription(
 }
 ```
 
-Finally, update the step 4 and 5 from the `RunOrchestrator` method in the `AudioTranscriptionOrchestration.cs` to trigger the activity of enrichement of the transcription before saving the result to the Cosmos DB:
+Finally, update the step 4 and 5 from the `RunOrchestrator` method in the `AudioTranscriptionOrchestration.cs` to trigger the activity of enrichment of the transcription before saving the result to the Cosmos DB:
 
 ```csharp
 // Step4: Enrich the transcription
@@ -1811,13 +1818,13 @@ if (!context.IsReplaying) { logger.LogInformation($"Finished processing of {audi
 
 Deploy the Azure Durable Function using the same method as before in the Azure Function App starting with `func-drbl-<your-instance-suffix-name>`.
 
-You will see a new property in your Cosmos DB item called `completion` with a summary of the audio made by Azure Open AI: 
+You will see a new property in your Cosmos DB item called `completion` with a summary of the audio made by Azure OpenAI:
 
 ![Open AI Summary Result](assets/open-ai-summary-result.png)
 
 ## Lab 5 : Summary
 
-You saw how easy it is to integrate Azure Open AI with Azure Function to enrich your items inside Cosmos DB. You have now a full scenario with your Azure Durable Function!
+You saw how easy it is to integrate Azure OpenAI with Azure Function to enrich your items inside Cosmos DB. You have now a full scenario with your Azure Durable Function!
 
 ---
 
