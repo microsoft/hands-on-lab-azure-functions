@@ -287,7 +287,7 @@ Security is our first concern at Microsoft. To avoid any credential management i
 - **Seamless Integration**: Managed identities can authenticate to any Azure service that supports Microsoft Entra ID authentication, making it easier to connect and secure your applications.
 - **Cost Efficiency**: There are no additional charges for using managed identities, making it a cost-effective solution for securing your Azure resources.
 
-In this workshop, we will only be using Managed Identities to secure service-to-service communications.
+In this workshop, you will only be using Managed Identities to secure service-to-service communications.
 
 ## Creating the Function App
 
@@ -351,7 +351,7 @@ Now that you have a skeleton for our `AudioUpload` function in the `AudioUpload.
 To upload the file, you will rely on the blob output binding [`BlobOutput`][blob-output] of the Azure Function, which will take care of the logic of connecting to the Storage Account and uploading the function with minimal line of code in our side.
 
 To do this, let's start by adding a `AudioUploadOutput` class to the `AudioUpload.cs` file.
-For simplicity reasons we are reusing the existing file to add the class, but keep in mind that you can also opt for adding it in its own dedicated file.
+For simplicity reasons you will be reusing the existing file to add the class, but keep in mind that you can also opt for adding it in its own dedicated file.
 
 ```csharp
 public class AudioUploadOutput
@@ -759,7 +759,7 @@ https://<FUNCTION_APP_NAME>.azurewebsites.net/runtime/webhooks/blobs?functionNam
 
 ![Create Event Subscription](assets/create-event-subscription.png)
 
-Finally, we just want to process `.wav` files, so you need to enable this in the **Filters** tab.
+Finally, you just want to process `.wav` files, so you need to enable this in the **Filters** tab.
 
 ![Event filtering](assets/event-filtering.png)
 
