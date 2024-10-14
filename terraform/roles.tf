@@ -91,3 +91,9 @@ resource "azurerm_role_assignment" "func_drbl_monitoring_metrics_publisher" {
   role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "func_drbl_cognitive_services_openai_user" {
+  scope                = azurerm_cognitive_account.open_ai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
+}

@@ -1716,13 +1716,25 @@ To be able to connect the Azure Function to the Azure Open AI service, you will 
 
 ### Add the role to the Azure Function App
 
-The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service using the managed identity mechanism.
+The Azure Function App will also need the role of `Cognitive Services OpenAI User` to be able to call the Azure Open AI service using managed identities.
 
-Assign the role of `Cognitive Services OpenAI User` to your Azure Function app identity by goind to your Azure Open AI service and in the **Access control (IAM)** section click on the **+ Add** then **Add role assignment** button and select the `Cognitive Services OpenAI User` role.
+This role was already assigned to your Azure Function when it was provisioned at the beginning of the lab.
 
-Select **Managed Identity** and select the Azure Function App that start with `func-drbl-` and click on the **Select** button.
+<div class="task" data-title="Tasks">
 
-Finally click on the **Review + assign** button.
+> - Ensure the Durable function app has the required permissions to consume Azure OpenAI
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+You can confirm this by going to your Azure Open AI service and in the **Access control (IAM)** section click on the **Role assignment** table and locate the `Cognitive Services OpenAI User` role (you can directly filter assignment by role).
+
+You should see that the Durable function's Function App has the role `Cognitive Services OpenAI User`.
+
+</details>
+
 
 ## Enrich the transcription with Azure Open AI
 
