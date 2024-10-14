@@ -12,13 +12,13 @@ resource "azurerm_cognitive_account" "open_ai" {
   }
 }
 
-resource "azurerm_cognitive_deployment" "gpt_35_turbo" {
-  name                 = "gpt-35-turbo"
+resource "azurerm_cognitive_deployment" "gpt_4o_mini" {
+  name                 = "gpt-4o-mini"
   cognitive_account_id = azurerm_cognitive_account.open_ai.id
   model {
     format  = "OpenAI"
-    name    = "gpt-35-turbo" # TODO deprecations: migrate to gpt-4o-mini
-    version = "0125"
+    name    = "gpt-4o-mini"
+    version = "2024-07-18"
   }
 
   sku {
