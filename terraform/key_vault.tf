@@ -6,6 +6,7 @@ resource "azurerm_key_vault" "this" {
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days  = 7
   purge_protection_enabled    = false # For demo purposes only
+  tags                        = local.tags
 
   sku_name = "standard"
 }
@@ -40,6 +41,7 @@ resource "azurerm_key_vault_secret" "speech_to_text_api_key" {
   name         = "speechToTextApiKey"
   value        = azurerm_cognitive_account.speech_to_text.primary_access_key
   key_vault_id = azurerm_key_vault.this.id
+  tags         = local.tags
 
   lifecycle {
     ignore_changes = [
