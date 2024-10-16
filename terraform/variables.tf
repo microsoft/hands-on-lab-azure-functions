@@ -18,6 +18,10 @@ variable "location" {
   description = "Azure deployment location"
   type        = string
   default     = "swedencentral"
+  validation {
+    condition     = can(regex("(eastus|eastus2|southcentralus|swedencentral|westus3)", var.environment))
+    error_message = "The environment value must be a valid."
+  }
 }
 
 variable "tags" {
