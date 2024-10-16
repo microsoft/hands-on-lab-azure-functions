@@ -9,16 +9,11 @@ param application string = 'hol'
 
 @description('The location where the resources will be created.')
 @allowed([
-  'swedencentral'
   'eastus'
   'eastus2'
-  'northeurope'
   'southcentralus'
-  'southeastasia'
   'swedencentral'
-  'uksouth'
-  'westus2'
-  'eastus2euap'
+  'westus3'
 ])
 param location string = 'swedencentral'
 
