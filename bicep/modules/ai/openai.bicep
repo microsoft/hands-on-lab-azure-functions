@@ -1,9 +1,10 @@
 param name string
+param location string = resourceGroup().location
 param tags object = {}
 
-resource openAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
+resource azureOpenAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: name
-  location: 'swedencentral'
+  location: location
   tags: tags
   sku: {
     name: 'S0'
@@ -24,7 +25,7 @@ resource openAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
 }
 
 resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2024-06-01-preview' = {
-  parent: openAI
+  parent: azureOpenAI
   name: 'gpt4oMini'
   sku: {
     name: 'Standard'
@@ -41,7 +42,8 @@ resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2024-06-01-
   }
 }
 
-output id string = openAI.id
-output endpoint string = openAI.properties.endpoint
+output id string = azureOpenAI.id
+output name string = azureOpenAI.name
+output endpoint string = azureOpenAI.properties.endpoint
 output gpt4oMinideploymentName string = gpt4oMini.properties.model.name
 

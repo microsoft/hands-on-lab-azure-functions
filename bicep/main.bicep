@@ -60,8 +60,8 @@ module loadTesting './modules/testing/load-testing.bicep' = {
   }
 }
 
-module openAI './modules/ai/openai.bicep' = {
-  name: 'openAI'
+module azureOpenAI './modules/ai/openai.bicep' = {
+  name: 'azureOpenAI'
   scope: resourceGroup
   params: {
     name: 'oai-${resourceSuffixKebabcase}'
@@ -247,11 +247,11 @@ module functionDrblFlex './modules/host/function.bicep' = {
       }
       {
         name  : 'AZURE_OPENAI_ENDPOINT'
-        value : openAI.outputs.endpoint
+        value : azureOpenAI.outputs.endpoint
       }
       {
         name  : 'CHAT_MODEL_DEPLOYMENT_NAME'
-        value : openAI.outputs.gpt4oMinideploymentName
+        value : azureOpenAI.outputs.gpt4oMinideploymentName
       }
     ]
   }
@@ -292,6 +292,12 @@ module roles './modules/security/roles.bicep' = {
     cosmosDbAccountName: cosmosDb.outputs.name
     funcStdPrincipalId: functionStdFlex.outputs.principalId
     funcDrblPrincipalId: functionDrblFlex.outputs.principalId
+    appInsightFuncStdName: applicationInsightsFuncStd.outputs.name
+    appInsightFuncDrblName: applicationInsightsFuncDrbl.outputs.name
+    keyVaultName: keyVault.outputs.name
+    storageAccountAudiosName: storageAccountAudios.outputs.name
+    storageFuncDrblName: storageAccountFuncDrbl.outputs.name
+    azureOpenAIName: azureOpenAI.outputs.name
   }
   dependsOn: [cosmosDb]
 }

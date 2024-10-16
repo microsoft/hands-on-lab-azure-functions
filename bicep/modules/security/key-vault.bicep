@@ -65,3 +65,6 @@ resource speechToTextApiKeySecret 'Microsoft.KeyVault/vaults/secrets@2024-04-01-
     value: speechToTextApiKey
   }
 }
+
+output id string = keyVault.id
+output name string = keyVault.name
