@@ -9,6 +9,7 @@ param functionAppRuntime string = 'dotnet-isolated'
 param functionAppRuntimeVersion string = '8.0'
 param maximumInstanceCount int = 100
 param instanceMemoryMB int = 2048
+param appSettings array = []
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
@@ -43,16 +44,23 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: flexFuncPlan.id
     siteConfig: {
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage__accountName'
-          value: storage.name
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsights.properties.ConnectionString
-        }
-      ]
+      appSettings: concat(
+        appSettings,        
+        [
+          {
+            name: 'AzureWebJobsStorage__accountName'
+            value: storage.name
+          }
+          {
+            name  : 'APPLICATIONINSIGHTS_AUTHENTICATION_STRING'
+            value : 'Authorization=AAD'
+          }
+          {
+            name  : 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+            value : 'InstrumentationKey=${appInsights.properties.InstrumentationKey};IngestionEndpoint=https://${location}.in.applicationinsights.azure.com/;LiveEndpoint=https://${location}.livediagnostics.monitor.azure.com/'
+          }
+        ]
+      )
     }
     functionAppConfig: {
       deployment: {

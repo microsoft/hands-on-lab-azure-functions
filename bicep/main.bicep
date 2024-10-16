@@ -142,6 +142,36 @@ module functionStdFlex './modules/host/function.bicep' = {
     applicationInsightsName: applicationInsightsFuncStd.outputs.name
     storageAccountName: storageAccountFuncStd.outputs.name
     deploymentStorageContainerName: deploymentPackageContainerName
+    appSettings: [
+      {
+        name  : 'AudioUploadStorage__serviceUri'
+        value : 'https://${storageAccountFuncStd.outputs.name}.blob.core.windows.net'
+      }
+      {
+        name  : 'STORAGE_ACCOUNT_CONTAINER'
+        value : storageAccountAudios.outputs.containers[0].name
+      }
+      {
+        name  : 'COSMOS_DB_DATABASE_NAME'
+        value : cosmosDb.outputs.databaseName
+      }
+      {
+        name  : 'COSMOS_DB_CONTAINER_ID'
+        value : cosmosDb.outputs.containerName
+      }
+      {
+        name  : 'COSMOS_DB__accountEndpoint'
+        value :  cosmosDb.outputs.endpoint
+      }
+      {
+        name  : 'ERROR_RATE'
+        value : '0'
+      }
+      {
+        name  : 'LATENCY_IN_SECONDS'
+        value : '0'
+      }
+    ]
   }
 }
 
@@ -178,6 +208,53 @@ module functionDrblFlex './modules/host/function.bicep' = {
     applicationInsightsName: applicationInsightsFuncDrbl.outputs.name
     storageAccountName: storageAccountFuncDrbl.outputs.name
     deploymentStorageContainerName: deploymentPackageContainerName
+    appSettings: [
+      {
+        name  : 'STORAGE_ACCOUNT_URL'
+        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+      }
+      {
+        name  : 'STORAGE_ACCOUNT_CONTAINER'
+        value : storageAccountAudios.outputs.containers[0].name
+      }
+      {
+        name  : 'STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri'
+        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+      }
+      {
+        name  : 'STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri'
+        value : 'https://${storageAccountAudios.outputs.name}.queue.core.windows.net'
+      }
+      {
+        name  : 'SPEECH_TO_TEXT_ENDPOINT'
+        value : speechService.outputs.endpoint
+      }
+      {
+        name  : 'SPEECH_TO_TEXT_API_KEY'
+        value : '@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)'
+        //, azurerm_key_vault.this.name, azurerm_key_vault_secret.speech_to_text_api_key.name)
+      }
+      {
+        name  : 'COSMOS_DB_DATABASE_NAME'
+        value : cosmosDb.outputs.databaseName
+      }
+      {
+        name  : 'COSMOS_DB_CONTAINER_ID'
+        value : cosmosDb.outputs.containerName
+      }
+      {
+        name  : 'COSMOS_DB__accountEndpoint'
+        value :  cosmosDb.outputs.endpoint
+      }
+      {
+        name  : 'AZURE_OPENAI_ENDPOINT'
+        value : openAI.outputs.endpoint
+      }
+      {
+        name  : 'CHAT_MODEL_DEPLOYMENT_NAME'
+        value : openAI.outputs.gpt4oMinideploymentName
+      }
+    ]
   }
 }
 

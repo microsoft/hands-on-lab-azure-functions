@@ -21,3 +21,4 @@ resource speechToTextService 'Microsoft.CognitiveServices/accounts@2024-06-01-pr
 
 output id string = speechToTextService.id
 output name string = speechToTextService.name
+output endpoint string = speechToTextService.properties.endpoint

@@ -60,3 +60,4 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
 output name string = storage.name
 output primaryEndpoints object = storage.properties.primaryEndpoints
 output storageId string = storage.id
+output containers array = containers

@@ -124,3 +124,6 @@ resource cosmosDbAudiosTranscriptsContainer 'Microsoft.DocumentDB/databaseAccoun
 
 output id string = cosmosDbAccount.id
 output name string = cosmosDbAccount.name
+output endpoint string = cosmosDbAccount.properties.documentEndpoint
+output databaseName string = cosmosDbDatabase.name
+output containerName string = cosmosDbAudiosTranscriptsContainer.name
