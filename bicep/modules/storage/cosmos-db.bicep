@@ -2,7 +2,7 @@ param name string
 param location string = resourceGroup().location
 param tags object = {}
 
-resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: name
   location: location
   tags: tags
@@ -61,7 +61,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
 }
 
 resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-05-15' = {
-  parent: cosmosDb
+  parent: cosmosDbAccount
   name: 'HolDb'
   properties: {
     resource: {
@@ -122,5 +122,5 @@ resource cosmosDbAudiosTranscriptsContainer 'Microsoft.DocumentDB/databaseAccoun
   }
 }
 
-output id string = cosmosDb.id
-output name string = cosmosDb.name
+output id string = cosmosDbAccount.id
+output name string = cosmosDbAccount.name

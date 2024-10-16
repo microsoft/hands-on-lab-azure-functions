@@ -208,3 +208,14 @@ module keyVault './modules/security/key-vault.bicep' = {
   }
   dependsOn: [speechService]
 }
+
+module roles './modules/security/roles.bicep' = {
+  name: 'roles'
+  scope: resourceGroup
+  params: {
+    cosmosDbAccountName: cosmosDb.outputs.name
+    funcStdId: functionStdFlex.outputs.id
+    funcDrblId: functionDrblFlex.outputs.id
+  }
+  dependsOn: [cosmosDb]
+}
