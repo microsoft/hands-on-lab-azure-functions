@@ -285,13 +285,13 @@ module keyVault './modules/security/key-vault.bicep' = {
   dependsOn: [speechToTextService]
 }
 
-// module roles './modules/security/roles.bicep' = {
-//   name: 'roles'
-//   scope: resourceGroup
-//   params: {
-//     cosmosDbAccountName: cosmosDb.outputs.name
-//     funcStdId: functionStdFlex.outputs.id
-//     funcDrblId: functionDrblFlex.outputs.id
-//   }
-//   dependsOn: [cosmosDb]
-// }
+module roles './modules/security/roles.bicep' = {
+  name: 'roles'
+  scope: resourceGroup
+  params: {
+    cosmosDbAccountName: cosmosDb.outputs.name
+    funcStdPrincipalId: functionStdFlex.outputs.principalId
+    funcDrblPrincipalId: functionDrblFlex.outputs.principalId
+  }
+  dependsOn: [cosmosDb]
+}

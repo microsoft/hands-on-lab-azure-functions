@@ -1,6 +1,6 @@
 param cosmosDbAccountName string
-param funcStdId string
-param funcDrblId string
+param funcStdPrincipalId string
+param funcDrblPrincipalId string
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
   name: cosmosDbAccountName
@@ -56,7 +56,7 @@ resource funcStdCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRo
   name: '51f03358-a4a2-b520-f424-1f6b236c26ba'
   properties: {
     roleDefinitionId: cosmosDbDataContributor.id
-    principalId: funcStdId
+    principalId: funcStdPrincipalId
     scope: cosmosDbAccount.id
   }
 }
@@ -66,7 +66,7 @@ resource funcDrblCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlR
   name: '5e38f7ee-7651-6b27-ae5a-5eff3e14731b'
   properties: {
     roleDefinitionId: cosmosDbDataContributor.id
-    principalId: funcDrblId
+    principalId: funcDrblPrincipalId
     scope: cosmosDbAccount.id
   }
 }
