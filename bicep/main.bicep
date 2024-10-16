@@ -23,7 +23,12 @@ param application string = 'hol'
 param location string = 'swedencentral'
 
 @description('Optional. The tags to be assigned to the created resources.')
-param tags object = {}
+param tags object = {
+  Deployment: 'bicep'
+  Environment: environment
+  Location: location
+  Application: application
+}
 
 var resourceToken = toLower(uniqueString(subscription().id, environment, application))
 var resourceSuffix = [
@@ -84,7 +89,7 @@ module storageAccountAudios './modules/storage/storage-account.bicep' = {
   params: {
     name: 'sto${resourceSuffixLowercase}'
     tags: tags
-    containers: [{name: 'audios'}]
+    containers: [{ name: 'audios' }]
   }
 }
 
@@ -118,7 +123,7 @@ module storageAccountFuncStd './modules/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: 'stfstd${resourceSuffixLowercase}'
-    containers: [{name: deploymentPackageContainerName}]
+    containers: [{ name: deploymentPackageContainerName }]
   }
 }
 
@@ -144,32 +149,32 @@ module functionStdFlex './modules/host/function.bicep' = {
     deploymentStorageContainerName: deploymentPackageContainerName
     appSettings: [
       {
-        name  : 'AudioUploadStorage__serviceUri'
-        value : 'https://${storageAccountFuncStd.outputs.name}.blob.core.windows.net'
+        name: 'AudioUploadStorage__serviceUri'
+        value: 'https://${storageAccountFuncStd.outputs.name}.blob.core.windows.net'
       }
       {
-        name  : 'STORAGE_ACCOUNT_CONTAINER'
-        value : storageAccountAudios.outputs.containers[0].name
+        name: 'STORAGE_ACCOUNT_CONTAINER'
+        value: storageAccountAudios.outputs.containers[0].name
       }
       {
-        name  : 'COSMOS_DB_DATABASE_NAME'
-        value : cosmosDb.outputs.databaseName
+        name: 'COSMOS_DB_DATABASE_NAME'
+        value: cosmosDb.outputs.databaseName
       }
       {
-        name  : 'COSMOS_DB_CONTAINER_ID'
-        value : cosmosDb.outputs.containerName
+        name: 'COSMOS_DB_CONTAINER_ID'
+        value: cosmosDb.outputs.containerName
       }
       {
-        name  : 'COSMOS_DB__accountEndpoint'
-        value :  cosmosDb.outputs.endpoint
+        name: 'COSMOS_DB__accountEndpoint'
+        value: cosmosDb.outputs.endpoint
       }
       {
-        name  : 'ERROR_RATE'
-        value : '0'
+        name: 'ERROR_RATE'
+        value: '0'
       }
       {
-        name  : 'LATENCY_IN_SECONDS'
-        value : '0'
+        name: 'LATENCY_IN_SECONDS'
+        value: '0'
       }
     ]
   }
@@ -184,7 +189,7 @@ module storageAccountFuncDrbl './modules/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: 'stfdrbl${resourceSuffixLowercase}'
-    containers: [{name: deploymentPackageContainerName}]
+    containers: [{ name: deploymentPackageContainerName }]
   }
 }
 
@@ -210,48 +215,48 @@ module functionDrblFlex './modules/host/function.bicep' = {
     deploymentStorageContainerName: deploymentPackageContainerName
     appSettings: [
       {
-        name  : 'STORAGE_ACCOUNT_URL'
-        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+        name: 'STORAGE_ACCOUNT_URL'
+        value: 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
       }
       {
-        name  : 'STORAGE_ACCOUNT_CONTAINER'
-        value : storageAccountAudios.outputs.containers[0].name
+        name: 'STORAGE_ACCOUNT_CONTAINER'
+        value: storageAccountAudios.outputs.containers[0].name
       }
       {
-        name  : 'STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri'
-        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+        name: 'STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri'
+        value: 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
       }
       {
-        name  : 'STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri'
-        value : 'https://${storageAccountAudios.outputs.name}.queue.core.windows.net'
+        name: 'STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri'
+        value: 'https://${storageAccountAudios.outputs.name}.queue.core.windows.net'
       }
       {
-        name  : 'SPEECH_TO_TEXT_ENDPOINT'
-        value : speechToTextService.outputs.endpoint
+        name: 'SPEECH_TO_TEXT_ENDPOINT'
+        value: speechToTextService.outputs.endpoint
       }
       {
-        name  : 'SPEECH_TO_TEXT_API_KEY'
-        value : '@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)'
+        name: 'SPEECH_TO_TEXT_API_KEY'
+        value: '@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)'
       }
       {
-        name  : 'COSMOS_DB_DATABASE_NAME'
-        value : cosmosDb.outputs.databaseName
+        name: 'COSMOS_DB_DATABASE_NAME'
+        value: cosmosDb.outputs.databaseName
       }
       {
-        name  : 'COSMOS_DB_CONTAINER_ID'
-        value : cosmosDb.outputs.containerName
+        name: 'COSMOS_DB_CONTAINER_ID'
+        value: cosmosDb.outputs.containerName
       }
       {
-        name  : 'COSMOS_DB__accountEndpoint'
-        value :  cosmosDb.outputs.endpoint
+        name: 'COSMOS_DB__accountEndpoint'
+        value: cosmosDb.outputs.endpoint
       }
       {
-        name  : 'AZURE_OPENAI_ENDPOINT'
-        value : azureOpenAI.outputs.endpoint
+        name: 'AZURE_OPENAI_ENDPOINT'
+        value: azureOpenAI.outputs.endpoint
       }
       {
-        name  : 'CHAT_MODEL_DEPLOYMENT_NAME'
-        value : azureOpenAI.outputs.gpt4oMinideploymentName
+        name: 'CHAT_MODEL_DEPLOYMENT_NAME'
+        value: azureOpenAI.outputs.gpt4oMinideploymentName
       }
     ]
   }
