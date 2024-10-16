@@ -15,23 +15,23 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
     }
     tenantId: tenant().tenantId
     accessPolicies: [
-      {
-        tenantId: tenant().tenantId
-        objectId: 'TODO'
-        permissions: {
-          certificates: []
-          keys: []
-          secrets: [
-            'Get'
-            'List'
-            'Set'
-            'Delete'
-            'Purge'
-            'Recover'
-          ]
-          storage: []
-        }
-      }
+      // {
+      //   tenantId: tenant().tenantId
+      //   objectId: 'TODO'
+      //   permissions: {
+      //     certificates: []
+      //     keys: []
+      //     secrets: [
+      //       'Get'
+      //       'List'
+      //       'Set'
+      //       'Delete'
+      //       'Purge'
+      //       'Recover'
+      //     ]
+      //     storage: []
+      //   }
+      // }
       {
         tenantId: tenant().tenantId
         objectId: funcDrblId

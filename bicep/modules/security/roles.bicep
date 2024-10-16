@@ -53,7 +53,7 @@ resource cosmosDbDataContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleD
 
 resource funcStdCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
   parent: cosmosDbAccount
-  name: 'funcStdCosmosDbContributor'
+  name: '51f03358-a4a2-b520-f424-1f6b236c26ba'
   properties: {
     roleDefinitionId: cosmosDbDataContributor.id
     principalId: funcStdId
@@ -63,7 +63,7 @@ resource funcStdCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRo
 
 resource funcDrblCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
   parent: cosmosDbAccount
-  name: 'funcDrblCosmosDbContributor'
+  name: '5e38f7ee-7651-6b27-ae5a-5eff3e14731b'
   properties: {
     roleDefinitionId: cosmosDbDataContributor.id
     principalId: funcDrblId

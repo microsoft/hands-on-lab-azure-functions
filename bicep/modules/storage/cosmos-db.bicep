@@ -11,24 +11,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
     type: 'None'
   }
   properties: {
-    // publicNetworkAccess: 'Enabled'
-    // enableAutomaticFailover: false
-    // enableMultipleWriteLocations: false
-    // isVirtualNetworkFilterEnabled: false
-    // virtualNetworkRules: []
-    // disableKeyBasedMetadataWriteAccess: false
-    // enableFreeTier: false
-    // enableAnalyticalStorage: false
-    // analyticalStorageConfiguration: {
-    //   schemaType: 'WellDefined'
-    // }
     databaseAccountOfferType: 'Standard'
-    // defaultIdentity: 'FirstPartyIdentity'
-    // networkAclBypass: 'None'
-    // disableLocalAuth: false
-    // enablePartitionMerge: false
-    // enableBurstCapacity: false
-    // minimalTlsVersion: 'Tls12'
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
       maxIntervalInSeconds: 5
@@ -41,22 +24,11 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
         isZoneRedundant: false
       }
     ]
-    // cors: []
     capabilities: [
       {
         name: 'EnableServerless'
       }
     ]
-    // ipRules: []
-    // backupPolicy: {
-    //   type: 'Periodic'
-    //   periodicModeProperties: {
-    //     backupIntervalInMinutes: 240
-    //     backupRetentionIntervalInHours: 8
-    //     backupStorageRedundancy: 'Geo'
-    //   }
-    // }
-    // networkAclBypassResourceIds: []
   }
 }
 
@@ -91,9 +63,6 @@ resource cosmosDbAudiosTranscriptsContainer 'Microsoft.DocumentDB/databaseAccoun
           {
             path: '/excluded/?'
           }
-          // {
-          //   path: '/"_etag"/?'
-          // }
         ]
       }
       partitionKey: {
@@ -113,11 +82,6 @@ resource cosmosDbAudiosTranscriptsContainer 'Microsoft.DocumentDB/databaseAccoun
           }
         ]
       }
-      // conflictResolutionPolicy: {
-      //   mode: 'LastWriterWins'
-      //   conflictResolutionPath: '/_ts'
-      // }
-      // computedProperties: []
     }
   }
 }
