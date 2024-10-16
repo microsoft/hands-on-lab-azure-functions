@@ -227,7 +227,7 @@ module functionDrblFlex './modules/host/function.bicep' = {
       }
       {
         name  : 'SPEECH_TO_TEXT_ENDPOINT'
-        value : speechService.outputs.endpoint
+        value : speechToTextService.outputs.endpoint
       }
       {
         name  : 'SPEECH_TO_TEXT_API_KEY'
@@ -258,19 +258,19 @@ module functionDrblFlex './modules/host/function.bicep' = {
   }
 }
 
-var speechToTextService = 'spch-${resourceSuffixKebabcase}'
+var speechToTextServiceName = 'spch-${resourceSuffixKebabcase}'
 
-module speechService './modules/ai/speech-to-text-service.bicep' = {
-  name: 'speechService'
+module speechToTextService './modules/ai/speech-to-text-service.bicep' = {
+  name: 'speechToTextService'
   scope: resourceGroup
   params: {
-    name: speechToTextService
+    name: speechToTextServiceName
     tags: tags
   }
 }
 
 resource speechServiceDeployed 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' existing = {
-  name: speechToTextService
+  name: speechToTextServiceName
   scope: resourceGroup
 }
 
@@ -283,7 +283,7 @@ module keyVault './modules/security/key-vault.bicep' = {
     speechToTextApiKey: speechServiceDeployed.listKeys().key1
     tags: tags
   }
-  dependsOn: [speechService]
+  dependsOn: [speechToTextService]
 }
 
 module roles './modules/security/roles.bicep' = {
