@@ -99,3 +99,4 @@ resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-
 
 output id string = flexFuncApp.id
 output name string = flexFuncApp.name
+output principalId string = flexFuncApp.identity.principalId

@@ -232,7 +232,6 @@ module functionDrblFlex './modules/host/function.bicep' = {
       {
         name  : 'SPEECH_TO_TEXT_API_KEY'
         value : '@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)'
-        //, azurerm_key_vault.this.name, azurerm_key_vault_secret.speech_to_text_api_key.name)
       }
       {
         name  : 'COSMOS_DB_DATABASE_NAME'
@@ -279,20 +278,20 @@ module keyVault './modules/security/key-vault.bicep' = {
   scope: resourceGroup
   params: {
     name: 'kv-${resourceSuffixKebabcase}'
-    funcDrblId: functionDrblFlex.outputs.id
+    funcDrblPrincipalId: functionDrblFlex.outputs.principalId
     speechToTextApiKey: speechServiceDeployed.listKeys().key1
     tags: tags
   }
   dependsOn: [speechToTextService]
 }
 
-module roles './modules/security/roles.bicep' = {
-  name: 'roles'
-  scope: resourceGroup
-  params: {
-    cosmosDbAccountName: cosmosDb.outputs.name
-    funcStdId: functionStdFlex.outputs.id
-    funcDrblId: functionDrblFlex.outputs.id
-  }
-  dependsOn: [cosmosDb]
-}
+// module roles './modules/security/roles.bicep' = {
+//   name: 'roles'
+//   scope: resourceGroup
+//   params: {
+//     cosmosDbAccountName: cosmosDb.outputs.name
+//     funcStdId: functionStdFlex.outputs.id
+//     funcDrblId: functionDrblFlex.outputs.id
+//   }
+//   dependsOn: [cosmosDb]
+// }

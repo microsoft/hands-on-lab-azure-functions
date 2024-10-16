@@ -2,7 +2,7 @@ param name string
 param location string = resourceGroup().location
 param tags object = {}
 param speechToTextApiKey string
-param funcDrblId string
+param funcDrblPrincipalId string
 
 resource keyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
   name: name
@@ -34,7 +34,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
       // }
       {
         tenantId: tenant().tenantId
-        objectId: funcDrblId
+        objectId: funcDrblPrincipalId
         permissions: {
           certificates: []
           keys: []
