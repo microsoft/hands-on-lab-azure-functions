@@ -22,9 +22,6 @@ param application string = 'hol'
 ])
 param location string = 'swedencentral'
 
-@description('Name of the application')
-param resourceGroupNameSuffix string = '01'
-
 @description('Optional. The tags to be assigned to the created resources.')
 param tags object = {}
 
@@ -33,8 +30,7 @@ var resourceSuffix = [
   toLower(environment)
   substring(toLower(location), 0, 2)
   substring(toLower(application), 0, 3)
-  substring(resourceToken, 0, 6)
-  resourceGroupNameSuffix
+  substring(resourceToken, 0, 8)
 ]
 var resourceSuffixKebabcase = join(resourceSuffix, '-')
 var resourceSuffixLowercase = join(resourceSuffix, '')
@@ -113,8 +109,7 @@ module cosmosDb './modules/storage/cosmos-db.bicep' = {
 
 // Standard Azure Functions Flex Consumption
 
-// Generate a unique container name that will be used for deployments.
-var deploymentFuncStandardStorageContainerName = 'app-package-std-${take(application, 32)}-${take(resourceToken, 7)}'
+var deploymentPackageContainerName = 'deploymentpackage'
 
 module storageAccountFuncStd './modules/storage/storage-account.bicep' = {
   name: 'storageAccountFuncStd'
@@ -123,7 +118,7 @@ module storageAccountFuncStd './modules/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: 'stfstd${resourceSuffixLowercase}'
-    containers: [{name: deploymentFuncStandardStorageContainerName}]
+    containers: [{name: deploymentPackageContainerName}]
   }
 }
 
@@ -146,14 +141,11 @@ module functionStdFlex './modules/host/function.bicep' = {
     appName: 'func-std-${resourceSuffixKebabcase}'
     applicationInsightsName: applicationInsightsFuncStd.outputs.name
     storageAccountName: storageAccountFuncStd.outputs.name
-    deploymentStorageContainerName: deploymentFuncStandardStorageContainerName
+    deploymentStorageContainerName: deploymentPackageContainerName
   }
 }
 
 // Durable Azure Functions Flex Consumption
-
-// Generate a unique container name that will be used for deployments.
-var deploymentFuncDurableStorageContainerName = 'app-package-drbl-${take(application, 32)}-${take(resourceToken, 7)}'
 
 module storageAccountFuncDrbl './modules/storage/storage-account.bicep' = {
   name: 'storageAccountFuncDrbl'
@@ -162,7 +154,7 @@ module storageAccountFuncDrbl './modules/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: 'stfdrbl${resourceSuffixLowercase}'
-    containers: [{name: deploymentFuncDurableStorageContainerName}]
+    containers: [{name: deploymentPackageContainerName}]
   }
 }
 
@@ -185,7 +177,7 @@ module functionDrblFlex './modules/host/function.bicep' = {
     appName: 'func-drbl-${resourceSuffixKebabcase}'
     applicationInsightsName: applicationInsightsFuncDrbl.outputs.name
     storageAccountName: storageAccountFuncDrbl.outputs.name
-    deploymentStorageContainerName: deploymentFuncDurableStorageContainerName
+    deploymentStorageContainerName: deploymentPackageContainerName
   }
 }
 

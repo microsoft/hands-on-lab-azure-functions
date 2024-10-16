@@ -20,12 +20,6 @@ variable "location" {
   default     = "swedencentral"
 }
 
-variable "resource_group_name_suffix" {
-  type        = string
-  default     = "01"
-  description = "The resource group name suffix"
-}
-
 variable "tags" {
   type        = map(any)
   description = "The custom tags for all resources"
