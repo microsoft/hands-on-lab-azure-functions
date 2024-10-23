@@ -10,6 +10,7 @@ param functionAppRuntimeVersion string = '8.0'
 param maximumInstanceCount int = 100
 param instanceMemoryMB int = 2048
 param appSettings array = []
+param azdServiceName string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
@@ -36,7 +37,7 @@ resource flexFuncPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
   name: appName
   location: location
-  tags: tags
+  tags: union(tags, { 'azd-service-name': azdServiceName })
   kind: 'functionapp,linux'
   identity: {
     type: 'SystemAssigned'
@@ -84,14 +85,15 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-var storageRoleDefinitionId = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' //Storage Blob Data Owner role
+// https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-blob-data-owner
+var storageBlobDataOwnerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
 
 // Allow access from function app to storage account using a managed identity
 resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(storage.id, storageRoleDefinitionId)
+  name: guid(storage.id, flexFuncApp.id, storageBlobDataOwnerRoleId)
   scope: storage
   properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', storageRoleDefinitionId)
+    roleDefinitionId: storageBlobDataOwnerRoleId
     principalId: flexFuncApp.identity.principalId
     principalType: 'ServicePrincipal'
   }

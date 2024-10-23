@@ -1,5 +1,10 @@
 targetScope = 'subscription'
 
+@minLength(1)
+@maxLength(64)
+@description('Name which is used to generate a short unique hash for each resource')
+param name string
+
 @description('The environment deployed')
 @allowed(['lab', 'dev', 'stg', 'prd'])
 param environment string = 'lab'
@@ -19,13 +24,25 @@ param location string = 'swedencentral'
 
 @description('Optional. The tags to be assigned to the created resources.')
 param tags object = {
+  'azd-env-name': name
   Deployment: 'bicep'
   Environment: environment
   Location: location
   Application: application
 }
 
-var resourceToken = toLower(uniqueString(subscription().id, environment, application))
+@description('Id of the user or app to assign application roles')
+param principalId string = ''
+
+@description('Whether the deployment is running on GitHub Actions')
+param runningOnGh string = ''
+
+@description('Whether the deployment is running on Azure DevOps Pipeline')
+param runningOnAdo string = ''
+
+var principalType = empty(runningOnGh) && empty(runningOnAdo) ? 'User' : 'ServicePrincipal'
+
+var resourceToken = toLower(uniqueString(subscription().id, name, environment, application))
 var resourceSuffix = [
   toLower(environment)
   substring(toLower(location), 0, 2)
@@ -82,9 +99,9 @@ module storageAccountAudios './modules/storage/storage-account.bicep' = {
   name: 'storageAccountAudios'
   scope: resourceGroup
   params: {
-    name: 'sto${resourceSuffixLowercase}'
+    name: take('sto${resourceSuffixLowercase}', 24)
     tags: tags
-    containers: [{ name: 'audios' }]
+    containers: [{name: 'audios'}]
   }
 }
 
@@ -109,180 +126,155 @@ module cosmosDb './modules/storage/cosmos-db.bicep' = {
 
 // Standard Azure Functions Flex Consumption
 
-var deploymentPackageContainerName = 'deploymentpackage'
+var uploaderDeploymentPackageContainerName = 'uploaderdeploymentpackage'
+var processorDeploymentPackageContainerName = 'processordeploymentpackage'
 
-module storageAccountFuncStd './modules/storage/storage-account.bicep' = {
-  name: 'storageAccountFuncStd'
+module storageAccountFunctions './modules/storage/storage-account.bicep' = {
+  name: 'storageAccountFunctions'
   scope: resourceGroup
   params: {
     location: location
     tags: tags
-    name: 'stfstd${resourceSuffixLowercase}'
-    containers: [{ name: deploymentPackageContainerName }]
+    name: take('stfunc${resourceSuffixLowercase}', 24)
+    containers: [
+      {name: uploaderDeploymentPackageContainerName}
+      {name: processorDeploymentPackageContainerName}
+    ]
   }
 }
 
-module applicationInsightsFuncStd './modules/monitor/application-insights.bicep' = {
-  name: 'applicationInsightsFuncStd'
+module applicationInsights './modules/monitor/application-insights.bicep' = {
+  name: 'applicationInsights'
   scope: resourceGroup
   params: {
-    name: 'appi-std-${resourceSuffixKebabcase}'
+    name: 'appi-${resourceSuffixKebabcase}'
     tags: tags
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 
-module functionStdFlex './modules/host/function.bicep' = {
-  name: 'functionStdFlex'
+module uploaderFunction './modules/host/function.bicep' = {
+  name: 'uploaderFunction'
   scope: resourceGroup
   params: {
-    tags: tags
     planName: 'asp-std-${resourceSuffixKebabcase}'
     appName: 'func-std-${resourceSuffixKebabcase}'
-    applicationInsightsName: applicationInsightsFuncStd.outputs.name
-    storageAccountName: storageAccountFuncStd.outputs.name
-    deploymentStorageContainerName: deploymentPackageContainerName
+    applicationInsightsName: applicationInsights.outputs.name
+    storageAccountName: storageAccountFunctions.outputs.name
+    deploymentStorageContainerName: uploaderDeploymentPackageContainerName
+    azdServiceName: 'uploader'
+    tags: tags
     appSettings: [
       {
-        name: 'AudioUploadStorage__serviceUri'
-        value: 'https://${storageAccountFuncStd.outputs.name}.blob.core.windows.net'
+        name  : 'AudioUploadStorage__serviceUri'
+        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
       }
       {
-        name: 'STORAGE_ACCOUNT_CONTAINER'
-        value: storageAccountAudios.outputs.containers[0].name
+        name  : 'STORAGE_ACCOUNT_CONTAINER'
+        value : storageAccountAudios.outputs.containers[0].name
       }
       {
-        name: 'COSMOS_DB_DATABASE_NAME'
-        value: cosmosDb.outputs.databaseName
+        name  : 'COSMOS_DB_DATABASE_NAME'
+        value : cosmosDb.outputs.databaseName
       }
       {
-        name: 'COSMOS_DB_CONTAINER_ID'
-        value: cosmosDb.outputs.containerName
+        name  : 'COSMOS_DB_CONTAINER_ID'
+        value : cosmosDb.outputs.containerName
       }
       {
-        name: 'COSMOS_DB__accountEndpoint'
-        value: cosmosDb.outputs.endpoint
+        name  : 'COSMOS_DB__accountEndpoint'
+        value :  cosmosDb.outputs.endpoint
       }
       {
-        name: 'ERROR_RATE'
-        value: '0'
+        name  : 'ERROR_RATE'
+        value : '0'
       }
       {
-        name: 'LATENCY_IN_SECONDS'
-        value: '0'
+        name  : 'LATENCY_IN_SECONDS'
+        value : '0'
       }
     ]
   }
 }
 
 // Durable Azure Functions Flex Consumption
-
-module storageAccountFuncDrbl './modules/storage/storage-account.bicep' = {
-  name: 'storageAccountFuncDrbl'
+module processorFunction './modules/host/function.bicep' = {
+  name: 'processorFunction'
   scope: resourceGroup
   params: {
-    location: location
-    tags: tags
-    name: 'stfdrbl${resourceSuffixLowercase}'
-    containers: [{ name: deploymentPackageContainerName }]
-  }
-}
-
-module applicationInsightsFuncDrbl './modules/monitor/application-insights.bicep' = {
-  name: 'applicationInsightsFuncDrbl'
-  scope: resourceGroup
-  params: {
-    name: 'appi-drbl-${resourceSuffixKebabcase}'
-    tags: tags
-    logAnalyticsWorkspaceId: logAnalytics.outputs.id
-  }
-}
-
-module functionDrblFlex './modules/host/function.bicep' = {
-  name: 'functionDrblFlex'
-  scope: resourceGroup
-  params: {
-    tags: tags
     planName: 'asp-drbl-${resourceSuffixKebabcase}'
     appName: 'func-drbl-${resourceSuffixKebabcase}'
-    applicationInsightsName: applicationInsightsFuncDrbl.outputs.name
-    storageAccountName: storageAccountFuncDrbl.outputs.name
-    deploymentStorageContainerName: deploymentPackageContainerName
+    applicationInsightsName: applicationInsights.outputs.name
+    storageAccountName: storageAccountFunctions.outputs.name
+    deploymentStorageContainerName: processorDeploymentPackageContainerName
+    azdServiceName: 'processor'
+    tags: tags
     appSettings: [
       {
-        name: 'STORAGE_ACCOUNT_URL'
-        value: 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+        name  : 'STORAGE_ACCOUNT_URL'
+        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
       }
       {
-        name: 'STORAGE_ACCOUNT_CONTAINER'
-        value: storageAccountAudios.outputs.containers[0].name
+        name  : 'STORAGE_ACCOUNT_CONTAINER'
+        value : storageAccountAudios.outputs.containers[0].name
       }
       {
-        name: 'STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri'
-        value: 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
+        name  : 'STORAGE_ACCOUNT_EVENT_GRID__blobServiceUri'
+        value : 'https://${storageAccountAudios.outputs.name}.blob.core.windows.net'
       }
       {
-        name: 'STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri'
-        value: 'https://${storageAccountAudios.outputs.name}.queue.core.windows.net'
+        name  : 'STORAGE_ACCOUNT_EVENT_GRID__queueServiceUri'
+        value : 'https://${storageAccountAudios.outputs.name}.queue.core.windows.net'
       }
       {
-        name: 'SPEECH_TO_TEXT_ENDPOINT'
-        value: speechToTextService.outputs.endpoint
+        name  : 'SPEECH_TO_TEXT_ENDPOINT'
+        value : speechToTextService.outputs.endpoint
       }
       {
-        name: 'SPEECH_TO_TEXT_API_KEY'
-        value: '@Microsoft.KeyVault(SecretUri=https://%s.vault.azure.net/secrets/%s/)'
+        name  : 'SPEECH_TO_TEXT_API_KEY'
+        value : '@Microsoft.KeyVault(SecretUri=${speechToTextService.outputs.secretUri})'
       }
       {
-        name: 'COSMOS_DB_DATABASE_NAME'
-        value: cosmosDb.outputs.databaseName
+        name  : 'COSMOS_DB_DATABASE_NAME'
+        value : cosmosDb.outputs.databaseName
       }
       {
-        name: 'COSMOS_DB_CONTAINER_ID'
-        value: cosmosDb.outputs.containerName
+        name  : 'COSMOS_DB_CONTAINER_ID'
+        value : cosmosDb.outputs.containerName
       }
       {
-        name: 'COSMOS_DB__accountEndpoint'
-        value: cosmosDb.outputs.endpoint
+        name  : 'COSMOS_DB__accountEndpoint'
+        value :  cosmosDb.outputs.endpoint
       }
       {
-        name: 'AZURE_OPENAI_ENDPOINT'
-        value: azureOpenAI.outputs.endpoint
+        name  : 'AZURE_OPENAI_ENDPOINT'
+        value : azureOpenAI.outputs.endpoint
       }
       {
-        name: 'CHAT_MODEL_DEPLOYMENT_NAME'
-        value: azureOpenAI.outputs.gpt4oMinideploymentName
+        name  : 'CHAT_MODEL_DEPLOYMENT_NAME'
+        value : azureOpenAI.outputs.gpt4oMinideploymentName
       }
     ]
   }
-}
-
-var speechToTextServiceName = 'spch-${resourceSuffixKebabcase}'
-
-module speechToTextService './modules/ai/speech-to-text-service.bicep' = {
-  name: 'speechToTextService'
-  scope: resourceGroup
-  params: {
-    name: speechToTextServiceName
-    tags: tags
-  }
-}
-
-resource speechServiceDeployed 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' existing = {
-  name: speechToTextServiceName
-  scope: resourceGroup
 }
 
 module keyVault './modules/security/key-vault.bicep' = {
   name: 'keyVault'
   scope: resourceGroup
   params: {
-    name: 'kv-${resourceSuffixKebabcase}'
-    funcDrblPrincipalId: functionDrblFlex.outputs.principalId
-    speechToTextApiKey: speechServiceDeployed.listKeys().key1
+    name: take('kv-${resourceSuffixKebabcase}', 24)
     tags: tags
   }
-  dependsOn: [speechToTextService]
+}
+
+module speechToTextService './modules/ai/speech-to-text-service.bicep' = {
+  name: 'speechToTextService'
+  scope: resourceGroup
+  params: {
+    name: 'spch-${resourceSuffixKebabcase}'
+    tags: tags
+    keyVaultName: keyVault.outputs.name
+  }
 }
 
 module roles './modules/security/roles.bicep' = {
@@ -290,14 +282,21 @@ module roles './modules/security/roles.bicep' = {
   scope: resourceGroup
   params: {
     cosmosDbAccountName: cosmosDb.outputs.name
-    funcStdPrincipalId: functionStdFlex.outputs.principalId
-    funcDrblPrincipalId: functionDrblFlex.outputs.principalId
-    appInsightFuncStdName: applicationInsightsFuncStd.outputs.name
-    appInsightFuncDrblName: applicationInsightsFuncDrbl.outputs.name
+    funcStdPrincipalId: uploaderFunction.outputs.principalId
+    funcDrblPrincipalId: processorFunction.outputs.principalId
+    userPrincipalId: principalId
+    userPrincipalType: principalType
+    appInsightsName: applicationInsights.outputs.name
     keyVaultName: keyVault.outputs.name
     storageAccountAudiosName: storageAccountAudios.outputs.name
-    storageFuncDrblName: storageAccountFuncDrbl.outputs.name
+    storageFuncDrblName: storageAccountFunctions.outputs.name
     azureOpenAIName: azureOpenAI.outputs.name
   }
   dependsOn: [cosmosDb]
 }
+
+output RESOURCE_GROUP string = resourceGroup.name
+output AZURE_UPLOADER_FUNCTION_APP_NAME string = uploaderFunction.outputs.name
+output AZURE_PROCESSOR_FUNCTION_APP_NAME string = processorFunction.outputs.name
+output AUDIOS_STORAGE_ACCOUNT_CONTAINER_NAME string = storageAccountAudios.outputs.containers[0].name
+output AUDIOS_EVENTGRID_SYSTEM_TOPIC_NAME string = eventGrid.outputs.name

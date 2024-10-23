@@ -45,5 +45,4 @@ resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2024-06-01-
 output id string = azureOpenAI.id
 output name string = azureOpenAI.name
 output endpoint string = azureOpenAI.properties.endpoint
-output gpt4oMinideploymentName string = gpt4oMini.properties.model.name
-
+output gpt4oMinideploymentName string = gpt4oMini.name
