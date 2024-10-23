@@ -1772,7 +1772,7 @@ Make sure to add the following `using` to be able to use the `TextCompletionInpu
 using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
 ```
 
-This will be managed for you the authentication to the Azure OpenAI service and send the transcription to the service to get a summary of the transcription.
+This will manage for you the authentication to the Azure OpenAI service and send the transcription to the service to get a summary of the transcription.
 
 Then you just have to consume the `Content` property of the response object and update the `Completion` field of the `AudioTranscription` object:
 
