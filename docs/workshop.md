@@ -1646,33 +1646,6 @@ You can specify the **Subscription key header name** and the **Subscription key 
 
 ## Call your API
 
-### Test inside APIM
-
-<div class="task" data-title="Tasks">
-
-> - Test your API inside Azure API Management and upload a new audio file .
-
-</div>
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-Select your API in the **APIs** section of your APIM instance and click on the **Test** tab, and let's test the `AudioUpload` endpoint:
-
-![APIM Test](assets/apim-select-api-for-testing.png)
-
-In the `Request Body` section of the request, select **Binary** and select your audio file to upload. Then click on the **Send** button.
-
-You should see the result of the call with the status code of `200` and the response body like this:
-
-![APIM Test call result](assets/apim-test-call-result.png)
-
-By calling the API from this menu, APIM is automatically adding the subscription key in the header of the request to call the Azure Function. You can see the detail of the request by clicking on the **Trace** button to run the request with all the details of the call. You will see it in the **Trace** tab of the `HTTP response` section.
-
-</details>
-
-### Test inside Postman
-
 Let's test this in Postman to see how it works. Open the Postman application and copy/paste the URL from your API in APIM. It should be inside the **Test** tab:
 
 ![APIM Test URL](assets/apim-test-tab-url.png)
@@ -1772,7 +1745,7 @@ Make sure to add the following `using` to be able to use the `TextCompletionInpu
 using Microsoft.Azure.Functions.Worker.Extensions.OpenAI.TextCompletion;
 ```
 
-This will be managed for you the authentication to the Azure OpenAI service and send the transcription to the service to get a summary of the transcription.
+This will manage for you the authentication to the Azure OpenAI service and send the transcription to the service to get a summary of the transcription.
 
 Then you just have to consume the `Content` property of the response object and update the `Completion` field of the `AudioTranscription` object:
 
