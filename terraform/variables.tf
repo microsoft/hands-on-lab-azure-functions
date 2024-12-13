@@ -18,12 +18,10 @@ variable "location" {
   description = "Azure deployment location"
   type        = string
   default     = "swedencentral"
-}
-
-variable "resource_group_name_suffix" {
-  type        = string
-  default     = "01"
-  description = "The resource group name suffix"
+  validation {
+    condition     = can(regex("(eastus|eastus2|southcentralus|swedencentral|westus3)", var.environment))
+    error_message = "The environment value must be a valid."
+  }
 }
 
 variable "tags" {

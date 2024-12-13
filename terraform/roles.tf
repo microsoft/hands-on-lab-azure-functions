@@ -1,10 +1,3 @@
-# Role to deploy the Azure Function with a managed identity using GitHub Actions.
-resource "azurerm_role_assignment" "func_std_website_contributor" {
-  scope                = data.azurerm_linux_function_app.func_std.id
-  role_definition_name = "Website Contributor"
-  principal_id         = azurerm_user_assigned_identity.func_std.principal_id
-}
-
 resource "random_uuid" "func_std_cosmos_db_contributor_uuid" {}
 resource "random_uuid" "func_drbl_cosmos_db_contributor_uuid" {}
 
