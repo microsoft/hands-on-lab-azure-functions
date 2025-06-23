@@ -19,8 +19,8 @@ variable "location" {
   type        = string
   default     = "swedencentral"
   validation {
-    condition     = can(regex("(eastus|eastus2|southcentralus|swedencentral|westus3)", var.environment))
-    error_message = "The environment value must be a valid."
+    condition     = can(regex("(eastus|eastus2|southcentralus|swedencentral|westus3)", var.location))
+    error_message = "The location value must be a valid Azure region."
   }
 }
 
