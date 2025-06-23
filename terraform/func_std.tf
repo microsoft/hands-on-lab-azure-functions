@@ -4,8 +4,8 @@ resource "azapi_resource" "func_std" {
   location                  = azurerm_resource_group.this.location
   name                      = local.func_std_name
   parent_id                 = azurerm_resource_group.this.id
-  tags                      = local.tags
-  body = jsonencode({
+  tags                      = local.tags_azapi
+  body = {
     kind = "functionapp,linux",
     identity = {
       type : "SystemAssigned"
@@ -76,7 +76,7 @@ resource "azapi_resource" "func_std" {
         ]
       }
     }
-  })
+  }
   depends_on = [
     azapi_resource.plan_func_std,
     azurerm_application_insights.func_std,

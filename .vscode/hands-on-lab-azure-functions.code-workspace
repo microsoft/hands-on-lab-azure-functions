@@ -4,11 +4,11 @@
 			"path": "..",
 		},
 		{
-			"path": "../src/solutions/FuncStd",
+			"path": "../solutions/FuncStd",
 			"name": "Az Function Standard (Solution)"
 		},
 		{
-			"path": "../src/solutions/FuncDurable",
+			"path": "../solutions/FuncDurable",
 			"name": "Az Function Durable (Solution)"
 		}
 	],

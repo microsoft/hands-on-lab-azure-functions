@@ -1,30 +1,29 @@
 {
   "name": "Functions Dev Container",
   "image": "mcr.microsoft.com/devcontainers/dotnet:8.0-jammy",
-
   "containerUser": "vscode",
-
   "features": {
-      //Az CLI install
-      "azure-cli": {
-        "version":"latest"
-      },
-
-      //Terraform + tflint install
-      "ghcr.io/devcontainers/features/terraform:latest":{ 
-        "version":"latest",
-        "tflint":"latest"
-      },
-
-      // //Azure Function Core tools + Visual Studio Extension install
-      "ghcr.io/jlaundry/devcontainer-features/azure-functions-core-tools:1":{},
+    //Az CLI install
+    "azure-cli": {
+      "version": "latest"
+    },
+    //Terraform + tflint install
+    "ghcr.io/devcontainers/features/terraform:latest": {
+      "version": "latest",
+      "tflint": "latest"
+    },
+    // //Azure Function Core tools + Visual Studio Extension install
+    "ghcr.io/jlaundry/devcontainer-features/azure-functions-core-tools:1": {},
   },
-
   // Ports Forward config : 
   // 7071 : Azure Function Debug Port
   // 1000[0,1,2] : Azurite storage emulator used with Azure Function
-  "forwardPorts": [7071, 10000, 10001, 10002],
-
+  "forwardPorts": [
+    7071,
+    10000,
+    10001,
+    10002
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -33,13 +32,14 @@
         // Azure Storage Account
         "ms-azuretools.vscode-azurestorage",
         // Language related extensions
-        "ms-dotnettools.csharp", 
+        "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         // Terraform
         "hashicorp.terraform",
         // Github
         "GitHub.vscode-github-actions",
-        "github.copilot"
+        "github.copilot",
+        "github.copilot-chat"
       ]
     }
   },

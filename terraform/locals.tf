@@ -19,11 +19,20 @@ locals {
     var.tags,
     tomap(
       {
-        "Deployment"      = "terraform",
-        "Environment"     = var.environment,
-        "Location"        = var.location,
-        "ProjectName"     = "hands-on-lab-azure-functions",
-        "Application"     = var.application
+        "Deployment"  = "terraform",
+        "Environment" = var.environment,
+        "Location"    = var.location,
+        "ProjectName" = "hands-on-lab-azure-functions",
+        "Application" = var.application
+      }
+    )
+  )
+
+  tags_azapi = merge(
+    local.tags,
+    tomap(
+      {
+        "TypeOfDeployment" = "azapi"
       }
     )
   )

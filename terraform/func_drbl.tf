@@ -4,8 +4,8 @@ resource "azapi_resource" "func_drbl" {
   location                  = azurerm_resource_group.this.location
   name                      = local.func_drbl_name
   parent_id                 = azurerm_resource_group.this.id
-  tags                      = local.tags
-  body = jsonencode({
+  tags                      = local.tags_azapi
+  body = {
     kind = "functionapp,linux",
     identity = {
       type : "SystemAssigned"
@@ -92,7 +92,7 @@ resource "azapi_resource" "func_drbl" {
         ]
       }
     }
-  })
+  }
   depends_on = [
     azapi_resource.plan_func_drbl,
     azurerm_application_insights.func_drbl,
