@@ -10,7 +10,7 @@ resource "azurerm_storage_account" "this" {
 
 resource "azurerm_storage_container" "this" {
   name                  = local.storage_account_container_name
-  storage_account_name  = azurerm_storage_account.this.name
+  storage_account_id    = azurerm_storage_account.this.id
   container_access_type = "private"
 }
 
@@ -26,7 +26,7 @@ resource "azurerm_storage_account" "func_std" {
 
 resource "azurerm_storage_container" "func_std_deployment" {
   name                  = local.function_deployment_package_container
-  storage_account_name  = azurerm_storage_account.func_std.name
+  storage_account_id    = azurerm_storage_account.func_std.id
   container_access_type = "private"
 }
 
@@ -42,6 +42,6 @@ resource "azurerm_storage_account" "func_drbl" {
 
 resource "azurerm_storage_container" "func_drbl_deployment" {
   name                  = local.function_deployment_package_container
-  storage_account_name  = azurerm_storage_account.func_drbl.name
+  storage_account_id    = azurerm_storage_account.func_drbl.id
   container_access_type = "private"
 }

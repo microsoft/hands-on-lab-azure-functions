@@ -90,3 +90,15 @@ resource "azurerm_role_assignment" "func_drbl_cognitive_services_openai_user" {
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = data.azurerm_linux_function_app.func_drbl.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "user_key_vault_administrator" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
+resource "azurerm_role_assignment" "api_management_service_contributor" {
+  scope                = azurerm_api_management.this.id
+  role_definition_name = "API Management Service Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}

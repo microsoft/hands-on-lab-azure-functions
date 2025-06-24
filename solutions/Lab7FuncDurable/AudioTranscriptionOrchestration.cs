@@ -157,7 +157,7 @@ namespace FuncDurable
         [Function(nameof(EnrichTranscription))]
         public static AudioTranscription EnrichTranscription(
             [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
-            [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+            [TextCompletionInput("Summarize {Result}", ChatModel = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
         )
         {
             ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));

@@ -4,7 +4,7 @@ resource "azapi_resource" "plan_func_std" {
   location                  = azurerm_resource_group.this.location
   parent_id                 = azurerm_resource_group.this.id
   schema_validation_enabled = false
-  body = jsonencode({
+  body = {
     kind = "functionapp",
     sku = {
       tier = "FlexConsumption",
@@ -13,8 +13,8 @@ resource "azapi_resource" "plan_func_std" {
     properties = {
       reserved = true
     }
-  })
-  tags = local.tags
+  }
+  tags = local.tags_azapi
 }
 
 resource "azapi_resource" "plan_func_drbl" {
@@ -23,7 +23,7 @@ resource "azapi_resource" "plan_func_drbl" {
   location                  = azurerm_resource_group.this.location
   parent_id                 = azurerm_resource_group.this.id
   schema_validation_enabled = false
-  body = jsonencode({
+  body = {
     kind = "functionapp",
     sku = {
       tier = "FlexConsumption",
@@ -32,6 +32,6 @@ resource "azapi_resource" "plan_func_drbl" {
     properties = {
       reserved = true
     }
-  })
-  tags = local.tags
+  }
+  tags = local.tags_azapi
 }
