@@ -335,7 +335,7 @@ func init --worker-runtime dotnet-isolated --target-framework net8.0
 func new --name AudioUpload --template 'HTTP Trigger'
 
 # Add a new Nuget package dependency to the Blob storage SDK
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.6.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.7.0
 ```
 
 ### .NET 8 implementation
@@ -658,10 +658,10 @@ cd FuncDurable
 func init --worker-runtime dotnetIsolated --target-framework net8.0
 
 # Add the Nuget package for Storage Account to use for Functions
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.6.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs --version 6.7.0
 
 # Add the Nuget package to use Durable Functions
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.DurableTask --version 1.0.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.DurableTask --version 1.4.0
 ```
 
 Add the `Audio.cs` file with the content provided above. Then create a new file called `AudioTranscriptionOrchestration.cs` to create the orchestration of the entire Azure Function.
@@ -979,7 +979,7 @@ namespace FuncDurable
 ```
 </details>
 
-Below is the orchestration part of the `AudioTranscriptionOrchestration.cs` file where you will have to implement the different steps of the orchestration marked by `TODO`:
+Below is the orchestration part of the `AudioTranscriptionOrchestration.cs` file where you will have to implement the different steps of the orchestration marked by `TODO`. Add it in the class `AudioTranscriptionOrchestration.cs` you created earlier:
 
 <details>
 <summary>📄 AudioTranscriptionOrchestration.cs</summary>
@@ -1181,7 +1181,7 @@ You now have a transcription of your audio file, next step is to store it in a N
 Because you need to connect to Azure Cosmos DB with the `CosmosDBOutput` binding you need to first add the associated Nuget Package:
 
 ```bash
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.12.0
 ```
 
 Then to store the transcription of the audio file in Cosmos DB, you will need to create a new `Activity Function` called `SaveTranscription` in the `AudioTranscriptionOrchestration.cs` file and apply the `CosmosDBOutput` binding to store the data in the Cosmos DB:
@@ -1398,7 +1398,7 @@ namespace FuncStd
 Finally, add the `Microsoft.Azure.Functions.Worker.Extensions.CosmosDB` Nuget package to your project by running the following command:
 
 ```sh
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.9.0
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB --version 4.12.0
 ```
 
 Redeploy the `func-std` Function App to add this new endpoint.
@@ -1430,7 +1430,8 @@ If you look at the environment variables of the `func-std` Function App, you wil
 
 1. Locate the Function App in the Azure Portal which start with `func-std`
 1. Click on the `Load Testing (Preview)` blade
-1. Click on the `Create test` button
+1. Click on the `Create test` button in the middle of the page
+1. In the `Test plan` tab
 1. Select the existing Azure Load Testing resource inside your resource group and provide a short name and description of the test:
 
 ![Create test](assets/monitoring-create-test.png)
@@ -1442,7 +1443,7 @@ If you look at the environment variables of the `func-std` Function App, you wil
 ![Add request](assets/monitoring-get-transcriptions-requests.png)
 
 
-1. Select the tab `Load configuration` and set `Test duration (minutes)` to 3
+1. Select the tab `Load` and set `Test duration (minutes)` to 3
 1. Click on `Review + create` then on `Create`
 1. The test will take few seconds to get created and then you should see a popup telling you that the test has started.
 
@@ -1688,7 +1689,7 @@ So the scope of the lab is this one:
 Inside your `FuncDurable` let's add the following version of `Microsoft.Azure.Functions.Worker.Extensions.OpenAI`:
 
 ```bash
-dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 0.17.0-alpha
+dotnet add package Microsoft.Azure.Functions.Worker.Extensions.OpenAI --version 0.19.0-alpha
 ```
 
 ### Add environment variables
@@ -1735,7 +1736,7 @@ First, you need to add the `TextCompletionInput` binding to the `EnrichTranscrip
 [Function(nameof(EnrichTranscription))]
 public static AudioTranscription EnrichTranscription(
     [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
-    [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+    [TextCompletionInput("Summarize {Result}", ChatModel = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
 )
 ```
 
@@ -1761,7 +1762,7 @@ So, to summarize, the function will look like this:
 [Function(nameof(EnrichTranscription))]
 public static AudioTranscription EnrichTranscription(
     [ActivityTrigger] AudioTranscription audioTranscription, FunctionContext executionContext,
-    [TextCompletionInput("Summarize {Result}", Model = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
+    [TextCompletionInput("Summarize {Result}", ChatModel = "%CHAT_MODEL_DEPLOYMENT_NAME%")] TextCompletionResponse response
 )
 {
     ILogger logger = executionContext.GetLogger(nameof(EnrichTranscription));

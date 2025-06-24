@@ -96,3 +96,9 @@ resource "azurerm_role_assignment" "user_key_vault_administrator" {
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+resource "azurerm_role_assignment" "api_management_service_contributor" {
+  scope                = azurerm_api_management.this.id
+  role_definition_name = "API Management Service Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}

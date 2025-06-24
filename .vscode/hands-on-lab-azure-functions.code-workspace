@@ -1,15 +1,40 @@
 {
 	"folders": [
 		{
-			"path": "..",
+			"path": "../.devcontainer",
+			"name": ".devcontainer"
+		},
+		{
+			"path": "../.vscode",
+			"name": ".vscode"
+		},
+		{
+			"path": "../docs",
+			"name": "docs"
+		},
+		{
+			"path": "../terraform",
+			"name": "terraform"
+		},
+		{
+			"path": "../solutions",
+			"name": "Solutions by labs"
 		},
 		{
 			"path": "../solutions/FuncStd",
-			"name": "Az Function Standard (Solution)"
+			"name": "Az Function Standard (Final Solution)"
 		},
 		{
 			"path": "../solutions/FuncDurable",
-			"name": "Az Function Durable (Solution)"
+			"name": "Az Function Durable (Final Solution)"
+		},
+		{
+			"path": "../FuncStd",
+			"name": "FuncStd (Project)"
+		},
+		{
+			"path": "../FuncDurable",
+			"name": "FuncDurable (Project)"
 		}
 	],
 	"settings": {

@@ -23,7 +23,9 @@ locals {
         "Environment" = var.environment,
         "Location"    = var.location,
         "ProjectName" = "hands-on-lab-azure-functions",
-        "Application" = var.application
+        "Application" = var.application,
+        "CostControl"     = "Ignore",
+        "SecurityControl" = "Ignore"
       }
     )
   )
