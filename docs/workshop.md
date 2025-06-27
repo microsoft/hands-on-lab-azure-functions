@@ -135,6 +135,7 @@ The following tools and access will be necessary to run the lab in good conditio
 - [Azure Functions Core Tools][az-func-core-tools] installed, this will be useful for creating the scaffold of your Azure Functions using command line.
 - If you are using VS Code, you can also install the [Azure Function extension][azure-function-vs-code-extension]
 - [.Net 8][download-dotnet] if you want to run all the Azure Functions solutions.
+- [Terraform][download-terraform] to deploy the infrastructure as code.
 
 Once you have set up your local environment, you can clone the hands-on-lab-azure-functions repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step. 
 
@@ -246,6 +247,7 @@ The deployment should take around 5 minutes to complete, you can continue readin
 [git-client]: https://git-scm.com/downloads
 [repo-fork]: https://github.com/microsoft/hands-on-lab-azure-functions/fork
 [vs-code]: https://code.visualstudio.com/
+[download-terraform]: https://developer.hashicorp.com/terraform/install
 
 ---
 
