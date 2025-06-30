@@ -361,6 +361,7 @@ public class AudioUploadOutput
     [BlobOutput("%STORAGE_ACCOUNT_CONTAINER%/{rand-guid}.wav", Connection = "AudioUploadStorage")]
     public byte[] Blob { get; set; }
 
+    [HttpResult]
     public required IActionResult HttpResponse { get; set; }
 }
 ```
