@@ -466,7 +466,7 @@ To do that you can use one of the sample audio files provided in the workshop:
 
 Next, run the following command to upload the audio file. You can also use Postman or another HTTP client if you have previously opted for using a dev container or a local dev environment.
 
-```sh
+```js
 curl -v -F audio=@docs/assets/audios/MicrosoftAI.wav http://localhost:7071/api/AudioUpload
 ```
 
